@@ -35,8 +35,8 @@ const staffTabs = ['staff', 'staff/attendance', 'staff/materials', 'staff/doubts
 app.use(express.static(PUBLIC_DIR));
 app.use('/uploads', express.static(UPLOADS_DIR));
 
-// DB Init
-createUserTable();
+// DB Init - DEFERRED to /api/health for zero-blocking startup
+// createUserTable();
 
 // API Routes
 const authRoutes = require('./routes/authRoutes');
@@ -50,17 +50,22 @@ app.use('/api/stakeholder', stakeholderRoutes);
 // Health check for Vercel diagnostic
 app.get('/api/health', async (req, res) => {
     try {
+        // Trigger lazy initialization only on demand
+        await createUserTable();
+        
         const { rows } = await db.query('SELECT NOW()');
         res.json({
             status: 'UP',
+            message: 'Database schema ensured and connection active.',
             environment: process.env.NODE_ENV || 'production',
             database: 'CONNECTED',
             timestamp: rows[0].now
         });
     } catch (err) {
+        console.error('Health Check Failure:', err.message);
         res.status(500).json({
             status: 'ERROR',
-            database: 'DISCONNECTED',
+            database: 'INIT_FAILURE',
             error: err.message
         });
     }
