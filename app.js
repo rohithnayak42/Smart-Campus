@@ -8,13 +8,22 @@ const { adminMiddleware } = require('./middlewares/authMiddleware');
 const { addUser, getUsers, getSubjects, getSchedules, getNotices, getIssues } = require('./controllers/adminController');
 
 
+// Pre-flight Environment Check
+const REQUIRED_VARS = ['DATABASE_URL', 'JWT_SECRET', 'EMAIL_USER', 'EMAIL_PASS'];
+REQUIRED_VARS.forEach(v => {
+  if (!process.env[v]) console.warn(`--- WARNING: Missing Environment Variable [${v}] ---`);
+});
+
+const app = express();
+
 // Diagnostic Heartbeat for Deployment Verification
 console.log('--- SYSTEM: App Initialization Started ---');
 db.query('SELECT 1')
   .then(() => console.log('--- SYSTEM: Core Database Heartbeat OK ---'))
-  .catch(err => console.error('--- SYSTEM: Database Connection Check Failed ---', err.message));
-
-const app = express();
+  .catch(err => {
+      console.warn('--- SYSTEM: Database Connection Check Failed (Graceful) ---');
+      console.warn('Reason:', err.message);
+  });
 
 // Middleware
 app.use(cors());
