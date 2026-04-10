@@ -98,50 +98,5 @@ app.get('/api/auto-login-token', (req, res) => {
     res.json({ token, role: 'admin' });
 });
 
-// Main Route - Landing Page
-app.get('/', (req, res) => {
-    res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
-});
-
-// Specific HTML Page Routing
-app.use('/staff', (req, res) => {
-    res.sendFile(path.join(PUBLIC_DIR, 'staff-dashboard.html'));
-});
-
-app.use('/student', (req, res) => {
-    res.sendFile(path.join(PUBLIC_DIR, 'student-dashboard.html'));
-});
-
-app.use('/worker', (req, res) => {
-    res.sendFile(path.join(PUBLIC_DIR, 'worker-dashboard.html'));
-});
-
-app.use('/guard', (req, res) => {
-    res.sendFile(path.join(PUBLIC_DIR, 'guard-dashboard.html'));
-});
-
-
-app.get('/:page', (req, res) => {
-    const page = req.params.page;
-    
-    // Redirect dashboard tabs to the main admin-dashboard or staff-dashboard container
-    if (page === 'staff' || (typeof staffTabs !== 'undefined' && staffTabs.includes(page))) {
-        return res.sendFile(path.join(PUBLIC_DIR, 'staff-dashboard.html'));
-    }
-    if (typeof dashboardTabs !== 'undefined' && dashboardTabs.includes(page)) {
-        return res.sendFile(path.join(PUBLIC_DIR, 'admin-dashboard.html'));
-    }
-
-    // Try serving specific HTML files
-    const filePath = path.join(PUBLIC_DIR, `${page}.html`);
-    res.sendFile(filePath, (err) => {
-        if (err) {
-            // If not found, fall back to index.html
-            res.status(404).sendFile(path.join(PUBLIC_DIR, 'index.html'));
-        }
-    });
-});
-
-
-// Export app for use in index.js and api/index.js
+// Export app for use in index.js
 module.exports = app;
