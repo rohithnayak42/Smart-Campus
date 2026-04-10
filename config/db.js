@@ -7,6 +7,12 @@ const pool = new Pool({
        : false,
 });
 
+if (!process.env.DATABASE_URL) {
+  console.error('❌ CRITICAL: DATABASE_URL environment variable is missing.');
+} else {
+  console.log('✅ DATABASE_URL detected.');
+}
+
 pool.on('error', (err) => {
   console.error('Unexpected error on idle client', err);
 });

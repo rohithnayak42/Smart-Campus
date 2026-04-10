@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const db = require('./config/db');
 const { createUserTable } = require('./models/User');
 const { adminMiddleware } = require('./middlewares/authMiddleware');
 const { addUser, getUsers, getSubjects, getSchedules, getNotices, getIssues } = require('./controllers/adminController');
@@ -35,6 +36,25 @@ const stakeholderRoutes = require('./routes/stakeholderRoutes');
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/stakeholder', stakeholderRoutes);
+
+// Health check for Vercel diagnostic
+app.get('/api/health', async (req, res) => {
+    try {
+        const { rows } = await db.query('SELECT NOW()');
+        res.json({
+            status: 'UP',
+            environment: process.env.NODE_ENV || 'production',
+            database: 'CONNECTED',
+            timestamp: rows[0].now
+        });
+    } catch (err) {
+        res.status(500).json({
+            status: 'ERROR',
+            database: 'DISCONNECTED',
+            error: err.message
+        });
+    }
+});
 
 // Quick Auto-Login Routes
 const jwt = require('jsonwebtoken');
@@ -99,9 +119,12 @@ app.get('/:page', (req, res) => {
 });
 
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+// Listen conditionally (Vercel handles its own server startup)
+if (process.env.NODE_ENV !== 'production') {
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
+}
 
 module.exports = app;
