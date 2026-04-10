@@ -8,12 +8,22 @@ const { adminMiddleware } = require('./middlewares/authMiddleware');
 const { addUser, getUsers, getSubjects, getSchedules, getNotices, getIssues } = require('./controllers/adminController');
 
 
+// Diagnostic Heartbeat for Deployment Verification
+console.log('--- SYSTEM: App Initialization Started ---');
+db.query('SELECT 1')
+  .then(() => console.log('--- SYSTEM: Core Database Heartbeat OK ---'))
+  .catch(err => console.error('--- SYSTEM: Database Connection Check Failed ---', err.message));
+
 const app = express();
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Path normalization for serverless environments
+const PUBLIC_DIR = path.resolve(__dirname, 'public');
+const UPLOADS_DIR = path.resolve(__dirname, 'uploads');
 
 // Support for Dashboard SPA tabs
 const dashboardTabs = ['admin-dashboard', 'users', 'subjects', 'timetable', 'notices', 'blueprint', 'issues'];
@@ -22,8 +32,8 @@ const dashboardTabs = ['admin-dashboard', 'users', 'subjects', 'timetable', 'not
 const staffTabs = ['staff', 'staff/attendance', 'staff/materials', 'staff/doubts', 'staff/admin-queries', 'staff/tests', 'staff/notices'];
 
 // Static file serving
-app.use(express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use(express.static(PUBLIC_DIR));
+app.use('/uploads', express.static(UPLOADS_DIR));
 
 // DB Init
 createUserTable();
@@ -76,24 +86,24 @@ app.get('/api/auto-login-token', (req, res) => {
 
 // Main Route - Landing Page
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/index.html'));
+    res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
 });
 
 // Specific HTML Page Routing
 app.use('/staff', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/staff-dashboard.html'));
+    res.sendFile(path.join(PUBLIC_DIR, 'staff-dashboard.html'));
 });
 
 app.use('/student', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/student-dashboard.html'));
+    res.sendFile(path.join(PUBLIC_DIR, 'student-dashboard.html'));
 });
 
 app.use('/worker', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/worker-dashboard.html'));
+    res.sendFile(path.join(PUBLIC_DIR, 'worker-dashboard.html'));
 });
 
 app.use('/guard', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/guard-dashboard.html'));
+    res.sendFile(path.join(PUBLIC_DIR, 'guard-dashboard.html'));
 });
 
 
@@ -101,19 +111,19 @@ app.get('/:page', (req, res) => {
     const page = req.params.page;
     
     // Redirect dashboard tabs to the main admin-dashboard or staff-dashboard container
-    if (page === 'staff' || staffTabs.includes(page)) {
-        return res.sendFile(path.join(__dirname, 'public/staff-dashboard.html'));
+    if (page === 'staff' || (typeof staffTabs !== 'undefined' && staffTabs.includes(page))) {
+        return res.sendFile(path.join(PUBLIC_DIR, 'staff-dashboard.html'));
     }
-    if (dashboardTabs.includes(page)) {
-        return res.sendFile(path.join(__dirname, 'public/admin-dashboard.html'));
+    if (typeof dashboardTabs !== 'undefined' && dashboardTabs.includes(page)) {
+        return res.sendFile(path.join(PUBLIC_DIR, 'admin-dashboard.html'));
     }
 
     // Try serving specific HTML files
-    const filePath = path.join(__dirname, 'public', `${page}.html`);
+    const filePath = path.join(PUBLIC_DIR, `${page}.html`);
     res.sendFile(filePath, (err) => {
         if (err) {
             // If not found, fall back to index.html
-            res.status(404).sendFile(path.join(__dirname, 'public', 'index.html'));
+            res.status(404).sendFile(path.join(PUBLIC_DIR, 'index.html'));
         }
     });
 });
