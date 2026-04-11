@@ -397,7 +397,7 @@
     <script>
         const tok = localStorage.getItem('sc_token');
         const storedRole = (localStorage.getItem('sc_role') || '').toLowerCase();
-        if(!tok || storedRole !== 'worker') window.location.href = '/auth';
+        if(!tok || storedRole !== 'worker') window.location.href = '/auth.html';
 
         function tBox(msg) {
             const t = document.getElementById('t-bin');
@@ -543,7 +543,7 @@
         // Logout
         function logout() { document.getElementById('logout-modal').style.display='flex'; }
         function closeLogout() { document.getElementById('logout-modal').style.display='none'; }
-        function confirmLogout() { localStorage.clear(); window.location.href='/auth'; }
+        function confirmLogout() { localStorage.clear(); window.location.href='/auth.html'; }
 
         async function loadNotices() {
             try {

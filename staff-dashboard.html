@@ -455,7 +455,7 @@
     <script>
         const tok = localStorage.getItem('sc_token');
         const storedRole = (localStorage.getItem('sc_role') || '').toLowerCase();
-        if(!tok || storedRole !== 'staff') window.location.href = '/auth';
+        if(!tok || storedRole !== 'staff') window.location.href = '/auth.html';
 
         function tBox(msg) {
             const t = document.getElementById('t-bin');
@@ -748,7 +748,7 @@
             } catch(e) {}
         }
 
-        function confirmLogout() { localStorage.clear(); window.location.href='/auth'; }
+        function confirmLogout() { localStorage.clear(); window.location.href='/auth.html'; }
 
         async function refreshData(id) {
             if (id === 'schedule') loadSchedule();

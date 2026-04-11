@@ -88,7 +88,7 @@ app.get('/auto-login', (req, res) => {
         localStorage.setItem('sc_token', '${token}');
         localStorage.setItem('sc_role', 'Admin');
         localStorage.setItem('role', 'Admin');
-        window.location.href = '/admin-dashboard';
+        window.location.href = '/admin-dashboard.html';
     </script></body></html>`;
     res.send(html);
 });
