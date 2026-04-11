@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Campus - Security Guard Dashboard</title>
+    <link rel="stylesheet" href="/css/dashboards.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">Guard Portal</div>
+            <nav class="sidebar-nav">
+                <a href="#" class="active">My Duties</a>
+                <a href="#">Monitor Status</a>
+                <a href="#">Campus Map</a>
+                <a href="#">Emergency Contact</a>
+                <a href="#" onclick="logout()" style="margin-top: 50px; color: #f87171;">Logout</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <h2>Welcome, Security Guard!</h2>
+            
+            <div class="card">
+                <h3>Assigned Patrol Duties</h3>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Duty Location</th>
+                            <th>Time Slot</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                         <tr>
+                            <td>Main Gate</td>
+                            <td>08:00 AM - 04:00 PM</td>
+                            <td><span class="role-badge" style="background:#FEE2E2; color:#991B1B">Pending</span></td>
+                            <td>
+                                <button class="btn btn-accent" style="padding: 5px 10px; font-size: 0.8rem;">Start Shift</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Hostel Block A</td>
+                            <td>04:00 PM - 12:00 AM</td>
+                            <td><span class="role-badge" style="background:#E5E7EB;">Upcoming</span></td>
+                            <td>
+                                <span class="text-muted">Wait</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card" style="border-left: 4px solid #EF4444;">
+                <h3>Emergency Alert to Admin</h3>
+                <form>
+                    <div class="form-group">
+                        <textarea class="form-control" rows="2" placeholder="Describe the incident..."></textarea>
+                    </div>
+                    <button class="btn" style="background: #EF4444;">Send Immediate Alert</button>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('sc_token');
+        if(!token || localStorage.getItem('sc_role') !== 'Security Guard') {
+            window.location.href = '/auth';
+        }
+        function logout() {
+            localStorage.clear();
+            window.location.href = '/auth';
+        }
+    </script>
+</body>
+</html>

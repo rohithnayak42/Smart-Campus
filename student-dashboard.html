@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Campus - Student Dashboard</title>
+    <link rel="stylesheet" href="/css/dashboards.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">Student Portal</div>
+            <nav class="sidebar-nav">
+                <a href="#" class="active">My Timetable</a>
+                <a href="#">Attendance & Marks</a>
+                <a href="#">Study Materials</a>
+                <a href="#">Ask Doubts</a>
+                <a href="#">Complaints</a>
+                <a href="#">Campus Map</a>
+                <a href="#" onclick="logout()" style="margin-top: 50px; color: #f87171;">Logout</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <h2>Welcome, Student!</h2>
+            
+            <div class="card">
+                <h3>Upcoming Classes</h3>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Subject</th>
+                            <th>Room</th>
+                            <th>Faculty</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>09:00 AM</td>
+                            <td>Software Engineering</td>
+                            <td>Room 101</td>
+                            <td>Dr. Smith</td>
+                        </tr>
+                        <tr>
+                            <td>11:00 AM</td>
+                            <td>Database Systems</td>
+                            <td>Room 205</td>
+                            <td>Prof. Johnson</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="card">
+                    <h3>Submit a Doubt</h3>
+                    <form>
+                        <div class="form-group">
+                            <label>Subject</label>
+                            <input type="text" class="form-control" placeholder="E.g., Software Engineering">
+                        </div>
+                        <div class="form-group">
+                            <label>Question</label>
+                            <textarea class="form-control" rows="3" placeholder="Type your doubt here..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Attach Image (Optional)</label>
+                            <input type="file" class="form-control">
+                        </div>
+                        <button type="submit" class="btn btn-accent">Send to Faculty</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3>File a Complaint</h3>
+                    <form>
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select class="form-control">
+                                <option>Mess Issue</option>
+                                <option>Canteen Issue</option>
+                                <option>Hostel Maintenance</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea class="form-control" rows="3" placeholder="Detail your issue..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Attach Photo (Optional)</label>
+                            <input type="file" class="form-control">
+                        </div>
+                        <button type="submit" class="btn" style="background:#EF4444;">Submit Complaint</button>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('sc_token');
+        if(!token || localStorage.getItem('sc_role') !== 'Student') {
+            window.location.href = '/auth';
+        }
+        function logout() {
+            localStorage.clear();
+            window.location.href = '/auth';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Campus - Worker Dashboard</title>
+    <link rel="stylesheet" href="/css/dashboards.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">Worker Portal</div>
+            <nav class="sidebar-nav">
+                <a href="#" class="active">My Tasks</a>
+                <a href="#">Report Issue</a>
+                <a href="#">Campus Map</a>
+                <a href="#" onclick="logout()" style="margin-top: 50px; color: #f87171;">Logout</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <h2>Welcome, Worker!</h2>
+            
+            <div class="card">
+                <h3>Assigned Tasks</h3>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Task Details</th>
+                            <th>Location</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                         <tr>
+                            <td>Fix AC in Room 101</td>
+                            <td>CS Dept Building</td>
+                            <td><span class="role-badge" style="background:#FEE2E2; color:#991B1B">Pending</span></td>
+                            <td>
+                                <button class="btn btn-accent" style="padding: 5px 10px; font-size: 0.8rem;">Mark Done</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Clean Cafeteria Hall</td>
+                            <td>Main Cafeteria</td>
+                            <td><span class="role-badge" style="background:#D1FAE5; color:#065F46">Completed</span></td>
+                            <td>
+                                <span class="text-muted">No Action Needed</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h3>Ask Queries to Admin</h3>
+                <form>
+                    <div class="form-group">
+                        <textarea class="form-control" rows="3" placeholder="Need equipment or facing issues? Type here..."></textarea>
+                    </div>
+                    <button class="btn btn-accent">Submit Query</button>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const token = localStorage.getItem('sc_token');
+        if(!token || localStorage.getItem('sc_role') !== 'Worker') {
+            window.location.href = '/auth';
+        }
+        function logout() {
+            localStorage.clear();
+            window.location.href = '/auth';
+        }
+    </script>
+</body>
+</html>

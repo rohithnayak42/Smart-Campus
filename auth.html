@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Campus - Authenticate</title>
+    <link rel="stylesheet" href="/css/dashboards.css">
+    <style>
+        .role-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .role-item {
+            padding: 20px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .role-item:hover {
+            border-color: var(--accent-color);
+            background-color: #f9fafb;
+        }
+        .role-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        .role-item.selected {
+            border-color: var(--accent-color);
+            background-color: var(--primary-color);
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container" style="justify-content: center; align-items: center;">
+        <div class="card auth-card" id="role-selection-view">
+            <h2>Select Your Role</h2>
+            <p class="text-muted">Choose your portal to login to Smart Campus</p>
+            <div class="role-grid">
+                <div class="role-item" onclick="selectRole('Admin')">
+                    <div class="role-icon">🛡️</div>
+                    <p>Admin</p>
+                </div>
+                <div class="role-item" onclick="selectRole('Faculty')">
+                    <div class="role-icon">👨‍🏫</div>
+                    <p>Faculty</p>
+                </div>
+                <div class="role-item" onclick="selectRole('Student')">
+                    <div class="role-icon">🎓</div>
+                    <p>Student</p>
+                </div>
+                <div class="role-item" onclick="selectRole('Worker')">
+                    <div class="role-icon">🛠️</div>
+                    <p>Worker</p>
+                </div>
+                <div class="role-item" onclick="selectRole('Security Guard')">
+                    <div class="role-icon">👮</div>
+                    <p>Guard</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card auth-card hidden" id="login-form-view">
+            <h2 id="login-title">Login</h2>
+            <form id="login-form">
+                <input type="hidden" id="selected-role">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="email" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="password" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-accent w-100" style="width: 100%;">Login</button>
+                <br><br>
+                <a href="#" onclick="goBack()" style="color: var(--primary-color); text-decoration: none; font-size: 0.9rem;">&larr; Back to Role Selection</a>
+            </form>
+        </div>
+
+        <!-- OTP Verification View -->
+        <div class="card auth-card hidden" id="otp-view">
+            <h2>Verify Admin OTP</h2>
+            <p>An OTP has been sent to your email.</p>
+            <form id="otp-form">
+                <div class="form-group">
+                    <label>OTP Code</label>
+                    <input type="text" id="otp" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-accent" style="width: 100%;">Verify</button>
+            </form>
+        </div>
+
+        <!-- First Login Password Change View -->
+        <div class="card auth-card hidden" id="change-pass-view">
+            <h2>Welcome!</h2>
+            <p>For your security, please change your password on your first login.</p>
+            <form id="change-pass-form">
+                <input type="hidden" id="change-pass-userid">
+                <div class="form-group">
+                    <label>New Password</label>
+                    <input type="password" id="new-pwd" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-accent" style="width: 100%;">Update & Continue</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const views = {
+            role: document.getElementById('role-selection-view'),
+            login: document.getElementById('login-form-view'),
+            otp: document.getElementById('otp-view'),
+            changePass: document.getElementById('change-pass-view')
+        };
+
+        function showView(viewId) {
+            Object.values(views).forEach(v => v.classList.add('hidden'));
+            views[viewId].classList.remove('hidden');
+        }
+
+        function selectRole(role) {
+            document.getElementById('selected-role').value = role;
+            document.getElementById('login-title').innerText = role + ' Login';
+            showView('login');
+        }
+
+        function goBack() { showView('role'); }
+
+        const routeMap = {
+            'Admin': '/admin-dashboard',
+            'Student': '/student-dashboard',
+            'Faculty': '/faculty-dashboard',
+            'Worker': '/worker-dashboard',
+            'Security Guard': '/guard-dashboard'
+        };
+
+        function handleLoginSuccess(token, role) {
+            localStorage.setItem('sc_token', token);
+            localStorage.setItem('sc_role', role);
+            window.location.href = routeMap[role] || '/';
+        }
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const role = document.getElementById('selected-role').value;
+
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, role })
+                });
+                const data = await res.json();
+
+                if (!res.ok) alert(data.message);
+                else {
+                    if (data.step === 'OTP') {
+                        showView('otp');
+                    } else if (data.step === 'CHANGE_PASSWORD') {
+                        document.getElementById('change-pass-userid').value = data.userId;
+                        showView('changePass');
+                    } else {
+                        handleLoginSuccess(data.token, data.role);
+                    }
+                }
+            } catch (err) { alert('Error logging in'); }
+        });
+
+        document.getElementById('otp-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const otp = document.getElementById('otp').value;
+
+            try {
+                const res = await fetch('/api/auth/verify-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, otp })
+                });
+                const data = await res.json();
+
+                if (!res.ok) alert(data.message);
+                else handleLoginSuccess(data.token, data.role);
+            } catch (err) { alert('OTP Verification failed'); }
+        });
+
+        document.getElementById('change-pass-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const userId = document.getElementById('change-pass-userid').value;
+            const newPassword = document.getElementById('new-pwd').value;
+
+            try {
+                const res = await fetch('/api/auth/change-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId, newPassword })
+                });
+                const data = await res.json();
+
+                if (!res.ok) alert(data.message);
+                else handleLoginSuccess(data.token, data.role);
+            } catch (err) { alert('Password change failed'); }
+        });
+    </script>
+</body>
+</html>
