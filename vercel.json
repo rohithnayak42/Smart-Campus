@@ -1,15 +1,8 @@
 {
-  "version": 2,
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api" },
-    { "source": "/auto-login", "destination": "/api" },
-    { "source": "/", "destination": "/index.html" },
-    { "source": "/admin-dashboard", "destination": "/admin-dashboard.html" },
-    { "source": "/staff", "destination": "/staff-dashboard.html" },
-    { "source": "/student", "destination": "/student-dashboard.html" },
-    { "source": "/worker", "destination": "/worker-dashboard.html" },
-    { "source": "/guard", "destination": "/guard-dashboard.html" }
+    { "source": "/auto-login", "destination": "/api" }
   ]
 }
