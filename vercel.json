@@ -2,18 +2,14 @@
   "version": 2,
   "cleanUrls": true,
   "trailingSlash": false,
-  "builds": [
-    { "src": "index.js", "use": "@vercel/node" }
-  ],
-  "routes": [
-    { "src": "/api/(.*)", "dest": "index.js" },
-    { "src": "/auto-login", "dest": "index.js" },
-    { "handle": "filesystem" },
-    { "src": "/admin-dashboard(.*)", "dest": "admin-dashboard.html" },
-    { "src": "/staff(.*)", "dest": "staff-dashboard.html" },
-    { "src": "/student(.*)", "dest": "student-dashboard.html" },
-    { "src": "/worker(.*)", "dest": "worker-dashboard.html" },
-    { "src": "/guard(.*)", "dest": "guard-dashboard.html" },
-    { "src": "/(users|subjects|timetable|notices|blueprint|issues)", "dest": "admin-dashboard.html" }
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api" },
+    { "source": "/auto-login", "destination": "/api" },
+    { "source": "/(users|subjects|timetable|notices|blueprint|issues)", "destination": "/admin-dashboard.html" },
+    { "source": "/admin-dashboard", "destination": "/admin-dashboard.html" },
+    { "source": "/staff", "destination": "/staff-dashboard.html" },
+    { "source": "/student", "destination": "/student-dashboard.html" },
+    { "source": "/worker", "destination": "/worker-dashboard.html" },
+    { "source": "/guard", "destination": "/guard-dashboard.html" }
   ]
 }
