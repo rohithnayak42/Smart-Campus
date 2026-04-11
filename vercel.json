@@ -1,12 +1,8 @@
 {
   "version": 2,
+  "cleanUrls": true,
+  "trailingSlash": false,
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index.js" },
-    { "source": "/auth", "destination": "/api/index.js" },
-    { "source": "/admin-dashboard", "destination": "/api/index.js" },
-    { "source": "/student-dashboard", "destination": "/api/index.js" },
-    { "source": "/faculty-dashboard", "destination": "/api/index.js" },
-    { "source": "/worker-dashboard", "destination": "/api/index.js" },
-    { "source": "/guard-dashboard", "destination": "/api/index.js" }
+    { "source": "/api/(.*)", "destination": "/api/index.js" }
   ]
 }
