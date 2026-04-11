@@ -31,7 +31,7 @@ const path = require('path');
 const fs = require('fs');
 
 const uploadsDir = path.join(__dirname, '..', 'uploads', 'materials');
-if (!fs.existsSync(uploadsDir)) { fs.mkdirSync(uploadsDir, { recursive: true }); }
+try { if (!fs.existsSync(uploadsDir)) { fs.mkdirSync(uploadsDir, { recursive: true }); } } catch (e) { console.warn("Uploads folder creation skipped (Vercel)"); }
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, uploadsDir),
