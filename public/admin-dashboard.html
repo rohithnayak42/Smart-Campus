@@ -3,250 +3,925 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Campus - Admin Dashboard</title>
-    <link rel="stylesheet" href="/css/dashboards.css">
+    <title>Smart Campus | Modern SaaS Admin</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        .nav-links li { list-style: none; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap');
+
+        :root {
+            --bg-color: linear-gradient(to bottom right, #F8FAFC, #EEF2F7);
+            --sidebar-grad: linear-gradient(to bottom, #1E293B, #0F172A);
+            --card-glass: #FFFFFF;
+            --primary-text: #0F172A;
+            --secondary-text: #64748B;
+            --accent: #C5A880; /* Gold */
+            --accent-soft: rgba(197, 168, 128, 0.15);
+            --success: #DCFCE7;
+            --success-text: #166534;
+            --info: #E0F2FE;
+            --info-text: #075985;
+            --warning: #FEF3C7;
+            --warning-text: #92400E;
+            --danger: #FEE2E2;
+            --danger-text: #991B1B;
+            --purple-pkg: #EDE9FE;
+            --purple-pkg-text: #5B21B6;
+            --border: rgba(0,0,0,0.04);
+            --radius-lg: 18px;
+            --shadow-md: 0 8px 25px rgba(0,0,0,0.06);
+            --shadow-hover: 0 15px 35px rgba(0,0,0,0.08);
+            --transition: all 0.3s ease;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+        body { 
+            background: var(--bg-color);
+            color: var(--primary-text); 
+            display: flex; 
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar Refinement */
+        .sidebar {
+            width: 280px;
+            background: var(--sidebar-grad);
+            color: white;
+            height: 100vh;
+            position: fixed;
+            left: 0; top: 0;
+            display: flex;
+            flex-direction: column;
+            padding: 35px 22px;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--accent);
+            letter-spacing: -1px;
+            margin-bottom: 50px;
+            padding-left: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-list { list-style: none; flex: 1; }
+        .nav-item { margin-bottom: 8px; }
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 18px;
+            color: #94A3B8;
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 500;
+            font-size: 14px;
+            transition: var(--transition);
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+        }
+
+        .nav-link.active {
+            background: var(--accent-soft);
+            color: white;
+            border-left: 3px solid var(--accent);
+            border-radius: 0 12px 12px 0;
+            padding-left: 15px; /* balance the border */
+        }
+
+        /* Header Refinement */
+        header {
+            position: fixed;
+            top: 0; right: 0;
+            width: calc(100% - 280px);
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 15px 40px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            z-index: 900;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .admin-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 6px 16px;
+            background: white;
+            border-radius: 100px;
+            border: 1px solid rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .admin-profile:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+
+        .initial-circle {
+            width: 30px; height: 30px;
+            background: #1E293B;
+            color: var(--accent);
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%;
+            font-weight: 800; font-size: 13px;
+        }
+
+        /* Main Content */
+        main {
+            margin-left: 280px;
+            padding: 100px 40px 50px;
+            width: calc(100% - 280px);
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        .filter-group { margin-bottom: 20px; }
+
+        /* Modern SaaS Cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            margin-bottom: 35px;
+        }
+
+        .soft-card {
+            background: var(--card-glass);
+            padding: 28px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border);
+            transition: var(--transition);
+            cursor: pointer;
+            position: relative;
+        }
+
+        .soft-card:hover { 
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .icon-circle {
+            width: 50px; height: 50px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        /* Color Guide - Guiding attention */
+        .color-blue { background: var(--info); color: var(--info-text); }
+        .color-purple { background: var(--purple-pkg); color: var(--purple-pkg-text); }
+        .color-green { background: var(--success); color: var(--success-text); }
+        .color-yellow { background: var(--warning); color: var(--warning-text); }
+        .color-red { background: var(--danger); color: var(--danger-text); }
+
+        .card-val { font-size: 32px; font-weight: 800; color: var(--primary-text); }
+        .card-label { font-size: 13px; color: var(--secondary-text); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* Buttons Upgrade */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), #E6D3A3);
+            color: #1E293B;
+            padding: 14px 28px;
+            border-radius: 100px;
+            border: none;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(197, 168, 128, 0.3);
+        }
+
+        .btn-secondary {
+            background: #0F172A;
+            color: white;
+            padding: 14px 28px;
+            border-radius: 100px;
+            border: none;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .btn-secondary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.3);
+        }
+
+        /* Layout Structure */
+        .split-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+
+        .content-box {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-md);
+            padding: 30px;
+        }
+
+        .section-title { font-size: 18px; font-weight: 700; margin-bottom: 20px; color: var(--primary-text); }
+
+        /* Table Refinement */
+        .linear-table { width: 100%; border-collapse: collapse; }
+        .linear-table th { text-align: left; padding: 15px 20px; font-size: 11px; color: var(--secondary-text); text-transform: uppercase; border-bottom: 1px solid var(--border); }
+        .linear-table td { padding: 18px 20px; border-bottom: 1px solid rgba(0,0,0,0.02); vertical-align: middle; }
+        .linear-table tr:hover td { background: #F8FAFC; }
+
+        .badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+        
+        /* Modals & Inputs */
+        .glass-modal {
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.35); backdrop-filter: blur(8px);
+            display: none; align-items: center; justify-content: center; z-index: 2000;
+        }
+        .modal-body {
+            background: white; padding: 40px; border-radius: 20px; width: 480px;
+            box-shadow: 0 40px 100px -20px rgba(15, 23, 42, 0.2);
+            animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes modalPop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .form-input {
+            width: 100%; padding: 12px 20px; border-radius: 10px; border: 1px solid var(--border);
+            outline: none; transition: var(--transition); background: #F8FAFC;
+        }
+        .form-input:focus { background: white; border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+
+        /* Users Page: Light Premium Redesign */
+        .users-hero-card {
+            background: linear-gradient(135deg, #1E293B, #334155);
+            color: white;
+            border-radius: 20px;
+            padding: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.1);
+        }
+
+        .hero-info h2 { font-size: 24px; font-weight: 800; margin-bottom: 5px; }
+        .hero-info p { font-size: 13px; color: #94A3B8; font-weight: 500; }
+
+        .hero-actions { display: flex; gap: 15px; align-items: center; }
+        .glass-search {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 12px 20px;
+            color: white;
+            outline: none;
+            width: 250px;
+            transition: var(--transition);
+        }
+        .glass-search::placeholder { color: #94A3B8; }
+        .glass-search:focus { border-color: var(--accent); background: rgba(255, 255, 255, 0.15); }
+
+        .filter-system {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 30px;
+            overflow-x: auto;
+            padding: 5px;
+        }
+        .filter-pill {
+            padding: 10px 24px;
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            background: #F1F5F9;
+            color: #334155;
+            white-space: nowrap;
+        }
+        .filter-pill:hover { transform: scale(1.05); background: #E2E8F0; }
+        .filter-pill.active {
+            background: linear-gradient(135deg, #6366F1, #8B5CF6);
+            color: white;
+            box-shadow: 0 8px 15px rgba(99, 102, 241, 0.25);
+        }
+
+        .premium-table-wrap {
+            background: #FFFFFF;
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .premium-table-wrap tr { transition: var(--transition); }
+        .premium-table-wrap tr:hover { 
+            background: #F8FAFC !important; 
+            transform: scale(1.005);
+            z-index: 10;
+        }
+
+        /* Role Badges */
+        .badge-role {
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .bg-student { background: #DCFCE7; color: #166534; }
+        .bg-faculty { background: #F3E8FF; color: #6B21A8; }
+        .bg-guard { background: #DBEAFE; color: #1E40AF; }
+        .bg-worker { background: #FFEDD5; color: #9A3412; }
+        .bg-admin { background: #0F172A; color: white; }
+
+        .action-icon {
+            cursor: pointer;
+            transition: var(--transition);
+            width: 18px;
+            height: 18px;
+        }
+        .action-icon:hover { transform: scale(1.25); }
+        .i-edit { color: #3B82F6; }
+        .i-del { color: #EF4444; }
+        .i-reset { color: var(--accent); }
+
+        /* Modal Evolution */
+        .modal-body {
+            animation: scaleFade 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes scaleFade {
+            from { opacity: 0; transform: scale(0.9) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .form-input { border: 1px solid #E2E8F0; }
+        .form-input:focus { 
+            border-color: #6366F1; 
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15); 
+        }
+
+        /* Course Portfolio: Academic Suite Update */
+        .course-hero-card {
+            background: linear-gradient(135deg, #1E293B, #334155);
+            color: white;
+            border-radius: 20px;
+            padding: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.1);
+        }
+
+        .subject-form-card {
+            background: #FFFFFF;
+            border-radius: 18px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            margin-bottom: 25px;
+            border: 1px solid var(--border);
+            animation: fadeUp 0.4s ease;
+            display: none; /* Toggleable */
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-grid-clean {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+        }
+
+        .premium-footer {
+            background: #F9FAFB;
+            padding: 20px 30px;
+            text-align: right;
+            font-weight: 800;
+            color: var(--accent);
+            font-size: 15px;
+            border-top: 2px solid #F1F5F9;
+        }
+
+        /* Academic Badges */
+        .badge-code { background: #EEF2FF; color: #4F46E5; padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 11px; }
+        .badge-area { background: #E0F2FE; color: #0284C7; padding: 6px 12px; border-radius: 8px; font-weight: 600; font-size: 11px; }
+        .badge-credits { background: #FEF3C7; color: #B45309; padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 11px; }
+
+        /* Toast */
+        .toast-box {
+            position: fixed; bottom: 30px; right: 30px;
+            background: #0F172A; color: white;
+            padding: 14px 28px; border-radius: 100px; font-weight: 600;
+            transform: translateY(100px); transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 3000;
+        }
+        .toast-box.active { transform: translateY(0); }
+
     </style>
 </head>
 <body>
-    <div class="dashboard-container">
-        <aside class="sidebar">
-            <div class="sidebar-header">Smart Campus</div>
-            <nav class="sidebar-nav">
-                <a href="#" onclick="showTab('users')" class="active">Manage Users</a>
-                <a href="#" onclick="showTab('schedules')">Teaching Schedule</a>
-                <a href="#" onclick="showTab('notices')">Live Notices</a>
-                <a href="#" onclick="showTab('blueprint')">Campus Blueprint</a>
-                <a href="#" onclick="logout()" style="margin-top: 50px; color: #f87171;">Logout</a>
-            </nav>
-        </aside>
 
-        <main class="main-content">
-            <!-- Manage Users Tab -->
-            <section id="users" class="tab-content active">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h2>Manage Users</h2>
-                    <button class="btn btn-accent" onclick="document.getElementById('add-user-modal').classList.remove('hidden')">+ Add User</button>
-                </div>
-                
-                <div class="filter-group">
-                    <label>Filter by Role: </label>
-                    <select id="role-filter" class="form-control" style="width: 200px; display: inline-block;" onchange="loadUsers()">
-                        <option value="All">All</option>
-                        <option value="Student">Students</option>
-                        <option value="Faculty">Faculty</option>
-                        <option value="Worker">Workers</option>
-                        <option value="Security Guard">Guards</option>
-                    </select>
-                </div>
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <i data-lucide="shield-check" style="width: 32px; height: 32px;"></i>
+            <span>Smart Campus</span>
+        </div>
+        <ul class="nav-list">
+            <li class="nav-item">
+                <a href="#" class="nav-link active" onclick="switchTab('overview', this)">
+                    <i data-lucide="layout-dashboard"></i><span>Overview</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" onclick="switchTab('users', this)">
+                    <i data-lucide="users"></i><span>Users Registry</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" onclick="switchTab('subjects', this)">
+                    <i data-lucide="book-open"></i><span>Academic Portfolio</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" onclick="switchTab('timetable', this)">
+                    <i data-lucide="calendar"></i><span>Class Schedule</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" onclick="switchTab('notices', this)">
+                    <i data-lucide="bell"></i><span>Campus Notices</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" onclick="switchTab('blueprint', this)">
+                    <i data-lucide="map"></i><span>Blueprint Hub</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" onclick="switchTab('issues', this)">
+                    <i data-lucide="alert-triangle"></i><span>Resolution Hub</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
 
-                <div class="card">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Login Email</th>
-                                <th>Real Email</th>
-                                <th>Role</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="user-table-body">
-                            <!-- Populated dynamically -->
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+    <header>
+        <div class="admin-profile">
+            <div class="initial-circle">SA</div>
+            <div style="text-align: left;">
+                <div style="font-weight: 700; font-size: 13px; color: var(--primary-text);">System Admin</div>
+                <div style="font-size: 11px; color: var(--secondary-text);">Root Privileges</div>
+            </div>
+            <i data-lucide="settings" style="width: 14px; color: var(--secondary-text); margin-left:10px;"></i>
+        </div>
+        <button class="btn-secondary" style="margin-left: 15px; padding: 8px 20px; font-size: 12px;" onclick="logout()">Logout</button>
+    </header>
 
-            <!-- Schedules Tab -->
-            <section id="schedules" class="tab-content">
-                <h2>Teaching Schedule & Timetables</h2>
-                <div class="card">
-                    <p>Schedule management functionality will be implemented here.</p>
+    <main>
+        <!-- Overview (Modern SaaS Style) -->
+        <div id="overview" class="tab-content active">
+            <div class="card-grid">
+                <div class="soft-card" onclick="switchTab('users')">
+                    <div class="icon-circle color-blue"><i data-lucide="users"></i></div>
+                    <div class="card-val" id="stat-users">0</div>
+                    <div class="card-label">Total Users</div>
                 </div>
-            </section>
+                <div class="soft-card" onclick="switchTab('subjects')">
+                    <div class="icon-circle color-purple"><i data-lucide="book-open"></i></div>
+                    <div class="card-val" id="stat-subjects">0</div>
+                    <div class="card-label">Subjects Portfolio</div>
+                </div>
+                <div class="soft-card" onclick="switchTab('timetable')">
+                    <div class="icon-circle color-green"><i data-lucide="calendar"></i></div>
+                    <div class="card-val" id="stat-slots">24</div>
+                    <div class="card-label">Schedule Slots</div>
+                </div>
+                <div class="soft-card" onclick="switchTab('notices')">
+                    <div class="icon-circle color-yellow"><i data-lucide="bell"></i></div>
+                    <div class="card-val" id="stat-notices">0</div>
+                    <div class="card-label">Live Notices</div>
+                </div>
+                <!-- Row 2 card -->
+                <div class="soft-card" onclick="switchTab('issues')">
+                    <div class="icon-circle color-red"><i data-lucide="life-buoy"></i></div>
+                    <div class="card-val" id="stat-issues">0</div>
+                    <div class="card-label">Resolved Issues</div>
+                </div>
+            </div>
 
-            <!-- Notices Tab -->
-            <section id="notices" class="tab-content">
-                <h2>Live Notices</h2>
-                <div class="card">
-                    <div class="form-group">
-                        <label>Notice Broadcast</label>
-                        <textarea class="form-control" rows="3" placeholder="Type notice to send to all users..."></textarea>
+            <div class="split-layout">
+                <div class="content-box">
+                    <h2 class="section-title">Operational Activity</h2>
+                    <div id="activity-log" style="display: grid; gap: 15px;">
+                        <div style="padding: 40px; text-align: center; color: var(--secondary-text);">
+                            <i data-lucide="shield" style="width: 32px; opacity: 0.2; margin-bottom: 10px;"></i>
+                            <p style="font-size: 13px;">System nodes operational. No critical activity logged.</p>
+                        </div>
                     </div>
-                    <button class="btn btn-accent">Publish Notice</button>
                 </div>
-            </section>
-
-            <!-- Blueprint Tab -->
-            <section id="blueprint" class="tab-content">
-                <h2>Campus Blueprint</h2>
-                <div class="card">
-                    <label>Upload Campus Map (PDF/Image)</label><br><br>
-                    <input type="file" class="form-control">
-                    <br>
-                    <button class="btn btn-accent">Upload Map</button>
+                <div class="content-box">
+                    <h2 class="section-title">Direct Triggers</h2>
+                    <div style="display: grid; gap: 12px;">
+                        <button class="btn-primary" onclick="openModal('mod-user')">Onboard New User</button>
+                        <button class="btn-secondary" onclick="switchTab('notices')">Publish Announcement</button>
+                        <button class="btn-secondary" style="background:#F1F5F9; color:var(--primary-text);" onclick="switchTab('subjects')">Add Curriculum</button>
+                    </div>
                 </div>
-            </section>
+            </div>
+        </div>
 
-        </main>
-    </div>
+        <!-- Users Registry (Light Premium Redesign) -->
+        <div id="users" class="tab-content">
+            <div class="users-hero-card">
+                <div class="hero-info">
+                    <h2>Manage Campus Users</h2>
+                    <p>Onboard, verify, and manage all campus stakeholders from a unified hub.</p>
+                </div>
+                <div class="hero-actions">
+                    <input type="text" class="glass-search" placeholder="Search Identity (Name/Email)..." onkeyup="searchUsers()" id="u-search">
+                    <button class="btn-primary" onclick="openModal('mod-user')">+ Onboard User</button>
+                </div>
+            </div>
+
+            <div class="filter-system">
+                <button class="filter-pill active" onclick="setFilter('All', this)">All Stakeholders</button>
+                <button class="filter-pill" onclick="setFilter('Student', this)">Students</button>
+                <button class="filter-pill" onclick="setFilter('Faculty', this)">Academic Faculty</button>
+                <button class="filter-pill" onclick="setFilter('Security Guard', this)">Security Guards</button>
+                <button class="filter-pill" onclick="setFilter('Worker', this)">Campus Workers</button>
+            </div>
+
+            <div class="premium-table-wrap">
+                <table class="linear-table">
+                    <thead>
+                        <tr>
+                            <th style="padding-left: 30px;">Stakeholder Identity</th>
+                            <th>Role Authorization</th>
+                            <th>Onboarding Date</th>
+                            <th style="text-align: right; padding-right: 30px;">Administrative Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-rows"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Course Portfolio (Academic Management Redesign) -->
+        <div id="subjects" class="tab-content">
+            <div class="course-hero-card">
+                <div class="hero-info">
+                    <h2>Course Portfolio</h2>
+                    <p>Manage campus academic units, credit allocations, and designated faculty overseers.</p>
+                </div>
+                <button class="btn-primary" onclick="toggleSubjectForm()">+ Add New Subject</button>
+            </div>
+
+            <!-- Inline Registration Form -->
+            <div id="subject-form-container" class="subject-form-card">
+                <h3 style="font-weight: 800; margin-bottom: 20px; font-size: 16px;">Register New Course Component</h3>
+                <form id="s-form-new">
+                    <div class="form-grid-clean">
+                         <div class="form-group">
+                             <label style="font-size: 11px; font-weight: 700; color: var(--secondary-text); margin-bottom: 5px; display: block;">SUBJECT NAME</label>
+                             <input type="text" name="name" class="form-input" placeholder="e.g., Software Engineering" required>
+                         </div>
+                         <div class="form-group">
+                             <label style="font-size: 11px; font-weight: 700; color: var(--secondary-text); margin-bottom: 5px; display: block;">SUBJECT CODE</label>
+                             <input type="text" name="code" class="form-input" placeholder="e.g., CS202" required>
+                         </div>
+                         <div class="form-group">
+                             <label style="font-size: 11px; font-weight: 700; color: var(--secondary-text); margin-bottom: 5px; display: block;">AREA / DOMAIN</label>
+                             <input type="text" name="area" class="form-input" placeholder="e.g., CR1" value="CR1">
+                         </div>
+                         <div class="form-group">
+                             <label style="font-size: 11px; font-weight: 700; color: var(--secondary-text); margin-bottom: 5px; display: block;">CREDITS</label>
+                             <input type="number" name="credits" class="form-input" value="3">
+                         </div>
+                         <div class="form-group">
+                             <label style="font-size: 11px; font-weight: 700; color: var(--secondary-text); margin-bottom: 5px; display: block;">FACULTY OVERSEER</label>
+                             <input type="text" name="assignedFaculty" class="form-input" placeholder="e.g., Prof. Mitchell">
+                         </div>
+                         <div class="form-group" style="display: flex; align-items: flex-end;">
+                             <button type="submit" class="btn-primary" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #6366F1, #8B5CF6); border-radius: 10px; color:white;">Register Component</button>
+                         </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="premium-table-wrap">
+                <table class="linear-table">
+                    <thead style="background: #F1F5F9;">
+                        <tr>
+                            <th style="padding-left: 30px;">Subject Domain / Name</th>
+                            <th>Reference Code</th>
+                            <th>Unit Credits</th>
+                            <th>Faculty Overlook</th>
+                            <th style="text-align: right; padding-right: 30px;">Operations</th>
+                        </tr>
+                    </thead>
+                    <tbody id="subject-rows"></tbody>
+                </table>
+                <div class="premium-footer" id="credits-totalizer">Total Academic Credits: 0</div>
+            </div>
+        </div>
+
+        <!-- Timetable -->
+        <div id="timetable" class="tab-content">
+             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h2 class="section-title" style="margin-bottom: 0;">Academic Scheduling</h2>
+                <button class="btn-primary" onclick="openModal('mod-time')">+ Allocate Slot</button>
+            </div>
+            <div id="time-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 24px;">
+                <!-- Timetable Cards -->
+            </div>
+        </div>
+
+        <!-- Notices -->
+        <div id="notices" class="tab-content">
+             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h2 class="section-title" style="margin-bottom: 0;">Live Broadcasts</h2>
+                <button class="btn-secondary" onclick="openModal('mod-notice')">+ Transmit Notice</button>
+            </div>
+            <div id="notice-stack" style="display: grid; gap: 20px;"></div>
+        </div>
+
+        <!-- Blueprint -->
+        <div id="blueprint" class="tab-content">
+             <div class="content-box" style="text-align: center; padding: 100px; border: 2px dashed #E2E8F0;">
+                  <i data-lucide="upload-cloud" style="width: 54px; height: 54px; color: var(--accent); margin-bottom: 20px;"></i>
+                  <h3>Digital Infrastructure Maps</h3>
+                  <p style="color: var(--secondary-text); margin: 15px 0 30px;">Upload master architecture files for campus-wide synchronization.</p>
+                  <button class="btn-primary">Browse Files</button>
+             </div>
+        </div>
+
+        <!-- Issues -->
+        <div id="issues" class="tab-content">
+             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h2 class="section-title" style="margin-bottom: 0;">Campus Resolution Wall</h2>
+            </div>
+            <div id="issue-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 24px;"></div>
+        </div>
+    </main>
 
     <!-- Modals -->
-    <div id="add-user-modal" class="hidden" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(4px);">
-        <div class="card" style="width: 480px; padding: 30px; border: 1px solid var(--border-color);">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
-                <div>
-                    <h3 style="margin-bottom: 5px;">Register New User</h3>
-                    <p class="text-muted" style="font-size: 0.9rem;">Credentials will be sent to the personal email.</p>
-                </div>
-                <button type="button" onclick="document.getElementById('add-user-modal').classList.add('hidden')" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
-            </div>
-            
-            <form id="add-user-form">
-                <div class="form-group">
-                    <label>Full Name</label>
-                    <input type="text" id="new-name" class="form-control" placeholder="John Doe" required>
-                </div>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <div class="form-group">
-                        <label>Login Email <span style="font-size: 0.7rem; color: var(--accent-color);">(System)</span></label>
-                        <input type="email" id="new-login-email" class="form-control" placeholder="john.campus" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Real Email <span style="font-size: 0.7rem; color: var(--accent-color);">(Personal)</span></label>
-                        <input type="email" id="new-real-email" class="form-control" placeholder="john@gmail.com" required>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Assigned Role</label>
-                    <select id="new-role" class="form-control">
-                        <option value="Student">Student</option>
-                        <option value="Faculty">Faculty</option>
-                        <option value="Worker">Worker</option>
-                        <option value="Security Guard">Security Guard</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label>Temporary Password</label>
-                    <input type="text" id="new-pwd" class="form-control" placeholder="Minimum 8 characters" required>
-                </div>
-
-                <div style="margin-top: 25px; display: flex; gap: 12px;">
-                    <button type="submit" class="btn btn-accent" style="flex: 2; padding: 12px;">Create & Send Email</button>
-                    <button type="button" class="btn" style="flex: 1; background: #E5E7EB; color: #374151;" onclick="document.getElementById('add-user-modal').classList.add('hidden')">Cancel</button>
-                </div>
-            </form>
+    <div id="mod-user" class="glass-modal" onclick="closeM(event, 'mod-user')">
+        <div class="modal-body">
+             <h2 style="margin-bottom: 25px;">Onboard New stakeholder</h2>
+             <form id="u-form" style="display: grid; gap:15px;">
+                  <input type="text" name="name" class="form-input" placeholder="Full Name" required>
+                  <input type="email" name="loginEmail" class="form-input" placeholder="Campus Email" required>
+                  <input type="email" name="realEmail" class="form-input" placeholder="Personal Email (Credentials destination)" required>
+                  <select name="role" class="form-input" required>
+                       <option value="Student">Student</option>
+                       <option value="Faculty">Faculty</option>
+                       <option value="Worker">Worker</option>
+                       <option value="Security Guard">Security Guard</option>
+                  </select>
+                  <input type="text" name="password" class="form-input" value="Campus@2026">
+                  <button type="submit" class="btn-primary" style="margin-top: 15px;">Authorize & Notify Identity</button>
+             </form>
         </div>
     </div>
 
+    <!-- Other Modals (Minimized labels) -->
+    <div id="mod-subject" class="glass-modal" onclick="closeM(event, 'mod-subject')"><div class="modal-body"><h2>Curriculum Unit</h2><form id="s-form" style="display:grid; gap:12px;"><input type="text" name="name" class="form-input" placeholder="Name"><input type="text" name="code" class="form-input" placeholder="Code"><input type="number" name="credits" class="form-input" value="3"><input type="text" name="assignedFaculty" class="form-input" placeholder="Faculty Overseer"><button type="submit" class="btn-primary">Register</button></form></div></div>
+    <div id="mod-time" class="glass-modal" onclick="closeM(event, 'mod-time')"><div class="modal-body"><h2>Allocate Resource</h2><form id="t-form" style="display:grid; gap:12px;"><select name="day" class="form-input"><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option></select><input type="text" name="timeSlot" class="form-input" placeholder="Time"><input type="text" name="subjectName" class="form-input" placeholder="Subject"><input type="text" name="facultyName" class="form-input" placeholder="Faculty"><input type="text" name="room" class="form-input" placeholder="Room"><input type="text" name="batch" class="form-input" placeholder="Batch"><button type="submit" class="btn-primary">Allocate</button></form></div></div>
+    <div id="mod-notice" class="glass-modal" onclick="closeM(event, 'mod-notice')"><div class="modal-body"><h2>Compose Notice</h2><form id="n-form" style="display:grid; gap:12px;"><input type="text" name="title" class="form-input" placeholder="Heading"><input type="text" name="targetRoles" class="form-input" placeholder="Audience"><textarea name="message" class="form-input" style="height:100px;" placeholder="Message Body"></textarea><button type="submit" class="btn-secondary" style="width:100%">Broadast Identity</button></form></div></div>
+
+    <div id="t-bin" class="toast-box">System confirmed status.</div>
+
     <script>
-        // Tab routing
-        function showTab(id) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.sidebar-nav a').forEach(el => el.classList.remove('active'));
+        const tok = localStorage.getItem('sc_token');
+        if(!tok || localStorage.getItem('sc_role') !== 'Admin') window.location.href = '/auth';
+
+        lucide.createIcons();
+
+        function switchTab(id, el) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
             document.getElementById(id).classList.add('active');
-            event.target.classList.add('active');
-        }
-
-        // Check authentication
-        const token = localStorage.getItem('sc_token');
-        if(!token || localStorage.getItem('sc_role') !== 'Admin') {
-            window.location.href = '/auth';
-        }
-
-        // Fetch users
-        async function loadUsers() {
-            const role = document.getElementById('role-filter').value;
-            try {
-                const res = await fetch(`/api/admin/users?role=${role}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+            
+            if(el) {
+                el.classList.add('active');
+            } else {
+                const navLinks = document.querySelectorAll('.nav-link');
+                navLinks.forEach(l => {
+                    const iconName = l.querySelector('i').getAttribute('data-lucide');
+                    if(iconName.includes(id) || l.textContent.toLowerCase().includes(id)) l.classList.add('active');
                 });
-                const users = await res.json();
-                
-                const tbody = document.getElementById('user-table-body');
-                tbody.innerHTML = '';
-                users.forEach(u => {
-                    tbody.innerHTML += `
-                        <tr>
-                            <td><strong>${u.name}</strong></td>
-                            <td>${u.login_email}</td>
-                            <td style="font-size: 0.85rem; color: var(--text-muted);">${u.real_email}</td>
-                            <td><span class="role-badge">${u.role}</span></td>
-                            <td>
-                                <button class="btn" style="padding: 6px 12px; font-size: 0.75rem; background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca;" onclick="deleteUser('${u.id}')">Delete</button>
-                            </td>
-                        </tr>
-                    `;
-                });
-            } catch(e) { console.error('Failed to load users'); }
-        }
-
-        async function deleteUser(id) {
-            if(!confirm('Are you sure?')) return;
-            await fetch(`/api/admin/users/${id}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            loadUsers();
-        }
-
-        document.getElementById('add-user-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const payload = {
-                name: document.getElementById('new-name').value,
-                loginEmail: document.getElementById('new-login-email').value,
-                realEmail: document.getElementById('new-real-email').value,
-                role: document.getElementById('new-role').value,
-                password: document.getElementById('new-pwd').value
-            };
-
-            const btn = e.target.querySelector('button[type="submit"]');
-            const originalText = btn.innerText;
-            btn.innerText = 'Creating & Sending...';
-            btn.disabled = true;
-
-            try {
-                const res = await fetch('/api/admin/users', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}` 
-                    },
-                    body: JSON.stringify(payload)
-                });
-                
-                const data = await res.json();
-                
-                if(res.ok) {
-                    alert('Success: ' + data.message);
-                    document.getElementById('add-user-modal').classList.add('hidden');
-                    loadUsers();
-                    e.target.reset();
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            } catch(e) { 
-                alert('System Error: Could not connect to the server'); 
-            } finally {
-                btn.innerText = originalText;
-                btn.disabled = false;
             }
-        });
 
-        function logout() {
-            localStorage.clear();
-            window.location.href = '/auth';
+            if(id === 'overview') loadStat();
+            if(id === 'users') loadUsrs();
+            if(id === 'subjects') loadSubj();
+            if(id === 'timetable') loadTim();
+            if(id === 'notices') loadNot();
+            if(id === 'issues') loadIss();
         }
 
-        loadUsers();
+        function tBox(msg) {
+            const t = document.getElementById('t-bin');
+            t.textContent = msg;
+            t.classList.add('active');
+            setTimeout(() => t.classList.remove('active'), 3000);
+        }
+
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeM(e, id) { if(e.target.id === id) document.getElementById(id).style.display = 'none'; }
+
+        // Logic
+        async function loadStat() {
+            try {
+                const res = await fetch('/api/admin/stats', { headers: { 'Authorization': `Bearer ${tok}` } });
+                const d = await res.json();
+                document.getElementById('stat-users').textContent = d.totalUsers;
+                document.getElementById('stat-subjects').textContent = d.totalSubjects;
+                document.getElementById('stat-issues').textContent = d.pendingIssues;
+                document.getElementById('stat-notices').textContent = d.totalNotices;
+            } catch(e) {}
+        }
+
+        async function loadUsrs(f = 'All') {
+            const res = await fetch(`/api/admin/users?role=${f}`, { headers: { 'Authorization': `Bearer ${tok}` } });
+            const u = await res.json();
+            const b = document.getElementById('user-rows');
+            b.innerHTML = '';
+            u.forEach(x => {
+                const r = x.role.toLowerCase();
+                const bc = r.includes('student') ? 'bg-student' : r.includes('faculty') ? 'bg-faculty' : r.includes('guard') ? 'bg-guard' : r.includes('worker') ? 'bg-worker' : 'bg-admin';
+                b.innerHTML += `
+                    <tr>
+                        <td style="padding-left: 30px;">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <div class="initial-circle" style="background:#F1F5F9; color:#0F172A; width:36px; height:36px;">${x.name[0].toUpperCase()}</div>
+                                <div>
+                                    <div style="font-weight:700; font-size:14px; color:var(--primary-text);">${x.name}</div>
+                                    <div style="font-size:11px; color:var(--secondary-text);">${x.login_email}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="badge-role ${bc}">${x.role}</span></td>
+                        <td><div style="font-size:12px; font-weight:500; color:var(--secondary-text);">${new Date(x.created_at).toLocaleDateString()}</div></td>
+                        <td style="text-align: right; padding-right: 30px;">
+                            <div style="display:flex; justify-content:flex-end; gap:15px;">
+                                <i data-lucide="key" class="action-icon i-reset" onclick="resetPassword(${x.id})" title="Reset Credentials"></i>
+                                <i data-lucide="edit-3" class="action-icon i-edit" title="Edit Profile"></i>
+                                <i data-lucide="trash-2" class="action-icon i-del" onclick="delUsr(${x.id})" title="Revoke Access"></i>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            lucide.createIcons();
+        }
+
+        function setFilter(role, el) {
+            document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+            el.classList.add('active');
+            loadUsrs(role);
+        }
+
+        document.getElementById('u-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const res = await fetch('/api/admin/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tok}` },
+                body: JSON.stringify(Object.fromEntries(new FormData(e.target)))
+            });
+            if(res.ok) { tBox('Success: Stakeholder Authorized & Emailed'); document.getElementById('mod-user').style.display='none'; loadUsrs(); }
+        };
+
+        async function delUsr(id) { if(confirm('Revoke access?')) { await fetch(`/api/admin/users/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${tok}` } }); loadUsrs(); } }
+
+        // Portfolio Redesign Logic
+        async function loadSubj() {
+            const r = await fetch('/api/admin/subjects', { headers: { 'Authorization': `Bearer ${tok}` } });
+            const s = await r.json();
+            const b = document.getElementById('subject-rows');
+            const totalEl = document.getElementById('credits-totalizer');
+            b.innerHTML = '';
+            let total = 0;
+
+            s.forEach(x => {
+                total += parseInt(x.credits || 0);
+                b.innerHTML += `
+                    <tr>
+                        <td style="padding-left: 30px;">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <span class="badge-area">${x.area || 'CR1'}</span>
+                                <div style="font-weight:700; font-size:14px; color:var(--primary-text);">${x.name}</div>
+                            </div>
+                        </td>
+                        <td><span class="badge-code">${x.code}</span></td>
+                        <td><span class="badge-credits">${x.credits} CR</span></td>
+                        <td><div style="font-size:12px; font-weight:500; color:var(--secondary-text);">${x.assigned_faculty || 'Unallocated'}</div></td>
+                        <td style="text-align: right; padding-right: 30px;">
+                            <div style="display:flex; justify-content:flex-end; gap:15px;">
+                                <i data-lucide="edit-3" class="action-icon i-edit" title="Edit Component"></i>
+                                <i data-lucide="trash-2" class="action-icon i-del" title="Exclude Component"></i>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            totalEl.textContent = `Total Academic Credits: ${total}`;
+            lucide.createIcons();
+        }
+
+        function toggleSubjectForm() {
+            const f = document.getElementById('subject-form-container');
+            f.style.display = (f.style.display === 'block') ? 'none' : 'block';
+        }
+
+        document.getElementById('s-form-new').onsubmit = async (e) => {
+            e.preventDefault();
+            const res = await fetch('/api/admin/subjects', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tok}` },
+                body: JSON.stringify(Object.fromEntries(new FormData(e.target)))
+            });
+            if(res.ok) { tBox('Success: Course Component Registered'); toggleSubjectForm(); loadSubj(); }
+        };
+
+        // Other Skeletal logic
+        async function loadTim() {
+            const r = await fetch('/api/admin/schedules', { headers: { 'Authorization': `Bearer ${tok}` } });
+            const d = await r.json();
+            const box = document.getElementById('time-grid');
+            box.innerHTML = '';
+            d.forEach(x => {
+                box.innerHTML += `<div class="content-box" style="padding:20px;">
+                    <div style="font-weight:700; font-size:12px; color:var(--accent);">${x.day} | ${x.time_slot}</div>
+                    <h4 style="margin:8px 0; font-size:15px;">${x.subject_name}</h4>
+                    <div style="font-size:11px; color:var(--secondary-text);">${x.room} | ${x.batch}</div>
+                </div>`;
+            });
+        }
+
+        async function loadNot() {
+            const r = await fetch('/api/admin/notices', { headers: { 'Authorization': `Bearer ${tok}` } });
+            const d = await r.json();
+            const box = document.getElementById('notice-stack');
+            box.innerHTML = '';
+            d.forEach(x => {
+                box.innerHTML += `<div class="content-box" style="padding:25px;">
+                    <h4 style="font-weight:700; color:var(--primary-text);">${x.title}</h4>
+                    <div style="color:var(--secondary-text); font-size:13px; margin-top:10px; line-height:1.5;">${x.message}</div>
+                </div>`;
+            });
+        }
+
+        async function loadIss() {
+            const r = await fetch('/api/admin/issues', { headers: { 'Authorization': `Bearer ${tok}` } });
+            const d = await r.json();
+            const box = document.getElementById('issue-grid');
+            box.innerHTML = '';
+            d.forEach(x => {
+                box.innerHTML += `<div class="soft-card" style="padding:25px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
+                         <span style="font-weight:700; font-size:11px; color:var(--danger-text);">${x.status}</span>
+                         <span style="font-size:10px; color:var(--secondary-text)">Reported by ${x.reporter_name}</span>
+                    </div>
+                    <h4 style="font-weight:700; color:var(--primary-text);">${x.title}</h4>
+                    <button class="btn-primary" style="padding:8px 20px; font-size:10px; margin-top:20px; width:100%;" onclick="resI(${x.id})">Mark Resolved</button>
+                </div>`;
+            });
+        }
+
+        async function resI(id) {
+            await fetch(`/api/admin/issues/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tok}` },
+                body: JSON.stringify({ status: 'Resolved' })
+            });
+            tBox('Issue Resolution Confirmed'); loadIss();
+        }
+
+        function logout() { localStorage.clear(); window.location.href='/auth'; }
+
+        loadStat();
     </script>
 </body>
 </html>

@@ -90,4 +90,140 @@ const deleteUser = async (req, res) => {
     }
 };
 
-module.exports = { addUser, getUsers, deleteUser };
+const getStats = async (req, res) => {
+    try {
+        const userStats = await db.query('SELECT role, count(*) FROM users GROUP BY role');
+        const issueStats = await db.query('SELECT count(*) FROM campus_issues WHERE status = \'Pending\'');
+        const subjectStats = await db.query('SELECT count(*) FROM subjects');
+        const noticeStats = await db.query('SELECT count(*) FROM campus_notices');
+        
+        const stats = {
+            roles: userStats.rows,
+            pendingIssues: issueStats.rows[0].count,
+            totalSubjects: subjectStats.rows[0].count,
+            totalNotices: noticeStats.rows[0].count,
+            totalUsers: userStats.rows.reduce((acc, curr) => acc + parseInt(curr.count), 0)
+        };
+        res.json(stats);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+const getIssues = async (req, res) => {
+    try {
+        const { rows } = await db.query('SELECT * FROM campus_issues ORDER BY created_at DESC');
+        res.json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+const updateIssueStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+        await db.query('UPDATE campus_issues SET status = $1 WHERE id = $2', [status, id]);
+        res.json({ message: 'Issue status updated' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+// Subjects CRUD
+const addSubject = async (req, res) => {
+    try {
+        const { name, code, credits, assignedFaculty } = req.body;
+        const { rows } = await db.query(
+            'INSERT INTO subjects (name, code, credits, assigned_faculty) VALUES ($1, $2, $3, $4) RETURNING *',
+            [name, code, credits, assignedFaculty]
+        );
+        res.status(201).json({ message: 'Subject added successfully', subject: rows[0] });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+const getSubjects = async (req, res) => {
+    try {
+        const { rows } = await db.query('SELECT * FROM subjects ORDER BY name ASC');
+        res.json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+// Timetable CRUD
+const addSchedule = async (req, res) => {
+    try {
+        const { day, timeSlot, subjectName, facultyName, room, batch } = req.body;
+        const { rows } = await db.query(
+            'INSERT INTO timetable_schedules (day, time_slot, subject_name, faculty_name, room, batch) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+            [day, timeSlot, subjectName, facultyName, room, batch]
+        );
+        res.status(201).json({ message: 'Schedule added successfully', schedule: rows[0] });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+const getSchedules = async (req, res) => {
+    try {
+        const { rows } = await db.query('SELECT * FROM timetable_schedules ORDER BY day, time_slot ASC');
+        res.json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+// Notices
+const addNotice = async (req, res) => {
+    try {
+        const { title, message, targetRoles } = req.body;
+        const { rows } = await db.query(
+            'INSERT INTO campus_notices (title, message, target_roles) VALUES ($1, $2, $3) RETURNING *',
+            [title, message, targetRoles]
+        );
+        res.status(201).json({ message: 'Notice published successfully', notice: rows[0] });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+const getNotices = async (req, res) => {
+    try {
+        const { rows } = await db.query('SELECT * FROM campus_notices ORDER BY created_at DESC');
+        res.json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+// User Control (Reset PW)
+const resetPassword = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { newPassword } = req.body;
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+        await db.query('UPDATE users SET password = $1, is_first_login = true WHERE id = $2', [hashedPassword, id]);
+        res.json({ message: 'Password reset and marked as first login' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+module.exports = { 
+    addUser, getUsers, deleteUser, getStats, getIssues, updateIssueStatus, 
+    addSubject, getSubjects, addSchedule, getSchedules, addNotice, getNotices, resetPassword 
+};

@@ -27,9 +27,59 @@ const createUserTable = async () => {
     
     try {
         await db.query(query);
-        console.log('Users table ensured successfully with real_email.');
+        
+        // Add new tables for Admin Dashboard Features
+        await db.query(`
+            CREATE TABLE IF NOT EXISTS subjects (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(100) NOT NULL,
+                code VARCHAR(20) UNIQUE NOT NULL,
+                credits INTEGER,
+                assigned_faculty VARCHAR(100),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS timetable_schedules (
+                id SERIAL PRIMARY KEY,
+                day VARCHAR(20) NOT NULL,
+                time_slot VARCHAR(50) NOT NULL,
+                subject_name VARCHAR(100) NOT NULL,
+                faculty_name VARCHAR(100),
+                room VARCHAR(50),
+                batch VARCHAR(50),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS campus_notices (
+                id SERIAL PRIMARY KEY,
+                title VARCHAR(200) NOT NULL,
+                message TEXT NOT NULL,
+                target_roles VARCHAR(100) DEFAULT 'Everyone',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS campus_issues (
+                id SERIAL PRIMARY KEY,
+                title VARCHAR(200) NOT NULL,
+                description TEXT NOT NULL,
+                reporter_name VARCHAR(100),
+                reporter_role VARCHAR(50),
+                status VARCHAR(20) DEFAULT 'Pending',
+                image_url VARCHAR(255),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS campus_blueprints (
+                id SERIAL PRIMARY KEY,
+                map_url VARCHAR(255) NOT NULL,
+                published_by VARCHAR(100),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `);
+
+        console.log('Database schema ensured (Users, Subjects, Schedules, Notices, Issues, Blueprints).');
     } catch (err) {
-        console.error('Error creating users table', err);
+        console.error('Error creating database tables', err);
     }
 };
 
