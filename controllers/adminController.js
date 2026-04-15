@@ -2,6 +2,14 @@ const db = require('../config/db');
 const bcrypt = require('bcryptjs');
 const { sendEmail } = require('../utils/mailer');
 
+const logActivity = async (message, type) => {
+    try {
+        await db.query('INSERT INTO system_activities (message, type) VALUES ($1, $2)', [message, type]);
+    } catch (error) {
+        console.error('Logging error:', error);
+    }
+};
+
 const addUser = async (req, res) => {
     try {
         const { name, campusEmail, loginEmail, personalEmail, realEmail, password, role } = req.body;
@@ -14,11 +22,14 @@ const addUser = async (req, res) => {
             return res.status(400).json({ message: 'Missing required email fields' });
         }
 
-        const VALID_ROLES = ['admin', 'staff', 'student', 'worker', 'guard'];
+        const VALID_ROLES = ['admin', 'staff', 'students', 'workers', 'guards'];
         let normalizedRole = role.toLowerCase().trim();
         
         // Normalize common alias
         if (normalizedRole === 'faculty') normalizedRole = 'staff';
+        if (normalizedRole === 'student') normalizedRole = 'students';
+        if (normalizedRole === 'worker') normalizedRole = 'workers';
+        if (normalizedRole === 'guard') normalizedRole = 'guards';
 
         if (!VALID_ROLES.includes(normalizedRole)) {
             return res.status(400).json({ message: `Invalid role: ${role}. Must be one of ${VALID_ROLES.join(', ')}` });
@@ -77,6 +88,8 @@ const addUser = async (req, res) => {
         sendEmail(effectiveRealEmail, emailSubject, emailBody, emailHtml)
             .then(() => console.log(`✅ Credentials email sent to ${effectiveRealEmail}`))
             .catch(err => console.error(`❌ Failed to send email to ${effectiveRealEmail}:`, err.message));
+            
+        logActivity(`New user added: ${name} (${role})`, 'user');
     } catch (error) {
         console.error('Error adding user:', error);
         res.status(500).json({ error: 'Server error during user creation' });
@@ -103,9 +116,12 @@ const updateUser = async (req, res) => {
         const norm = (val) => (val || '').toString().toLowerCase().trim();
 
         // Standardize Roles
-        const VALID_ROLES = ['admin', 'staff', 'student', 'worker', 'guard'];
+        const VALID_ROLES = ['admin', 'staff', 'students', 'workers', 'guards'];
         let normalizedRole = role ? role.toLowerCase().trim() : oldUser.role;
         if (normalizedRole === 'faculty') normalizedRole = 'staff';
+        if (normalizedRole === 'student') normalizedRole = 'students';
+        if (normalizedRole === 'worker') normalizedRole = 'workers';
+        if (normalizedRole === 'guard') normalizedRole = 'guards';
 
         if (!VALID_ROLES.includes(normalizedRole)) {
             console.error(`[DEBUG] Invalid role '${role}' rejected.`);
@@ -195,6 +211,8 @@ const updateUser = async (req, res) => {
             details: { name: finalName, role: normalizedRole, email: finalLoginEmail }
         });
 
+        logActivity(`User updated: ${finalName}`, 'user');
+
     } catch (error) {
         console.error('[DEBUG] CRITICAL EXCEPTION:', error);
         res.status(500).json({ error: 'Server error during user update' });
@@ -207,7 +225,7 @@ const getUsers = async (req, res) => {
         let query = 'SELECT id, name, email as login_email, real_email, role, is_first_login, temp_password, current_status, created_at FROM users';
         let params = [];
         
-        if (role && role !== 'All') {
+        if (role && role.toLowerCase() !== 'all') {
             query += ' WHERE role = $1';
             params.push(role);
         }
@@ -227,6 +245,7 @@ const deleteUser = async (req, res) => {
         const { id } = req.params;
         await db.query('DELETE FROM users WHERE id = $1', [id]);
         res.json({ message: 'User deleted successfully' });
+        logActivity(`User ID ${id} removed from registry`, 'user');
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Server error' });
@@ -274,6 +293,7 @@ const updateIssueStatus = async (req, res) => {
         const { status } = req.body;
         await db.query('UPDATE campus_issues SET status = $1 WHERE id = $2', [status, id]);
         res.json({ message: 'Issue status updated' });
+        logActivity(`Complaint ID ${id} marked as ${status}`, 'issue');
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Server error' });
@@ -296,6 +316,7 @@ const addSubject = async (req, res) => {
         );
         const subj = rows[0];
         res.status(201).json({ message: 'Subject added successfully', subject: { ...subj, faculty: subj.assigned_faculty } });
+        logActivity(`New subject added: ${name}`, 'academic');
     } catch (error) {
         console.error('Error adding subject:', error);
         if (error.code === '23505') {
@@ -325,6 +346,7 @@ const updateSubject = async (req, res) => {
             [name, code, parseInt(credits, 10), effectiveFaculty, id]
         );
         res.json({ message: 'Subject updated successfully' });
+        logActivity(`Subject updated: ${name}`, 'academic');
     } catch (error) {
         console.error('Error updating subject:', error);
         if (error.code === '23505') {
@@ -339,6 +361,7 @@ const deleteSubject = async (req, res) => {
         const { id } = req.params;
         await db.query('DELETE FROM subjects WHERE id = $1', [id]);
         res.json({ message: 'Subject deleted successfully' });
+        logActivity(`Subject ID ${id} removed`, 'academic');
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Server error' });
@@ -348,23 +371,23 @@ const deleteSubject = async (req, res) => {
 // Timetable CRUD
 const addSchedule = async (req, res) => {
     try {
-        const { day, time_slot, timeSlot, subject_name, subjectName, faculty_name, facultyName, room, batch } = req.body;
+        const { day, time_slot, subject_name, faculty_name, room } = req.body;
         const effectiveDay = day;
-        const effectiveTimeSlot = time_slot || timeSlot || '';
-        const effectiveSubject = subject_name || subjectName || '';
-        const effectiveFaculty = faculty_name || facultyName || '';
-        const effectiveRoom = room || '';
-        const effectiveBatch = batch || '';
+        const effectiveTimeSlot = time_slot || '';
+        const effectiveSubject = subject_name || '';
+        const effectiveFaculty = faculty_name || 'TBA';
+        const effectiveRoom = room || 'N/A';
 
         if (!effectiveDay || !effectiveTimeSlot || !effectiveSubject) {
             return res.status(400).json({ message: 'Day, time slot, and subject name are required.' });
         }
 
         const { rows } = await db.query(
-            'INSERT INTO timetable_schedules (day, time_slot, subject_name, faculty_name, room, batch) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-            [effectiveDay, effectiveTimeSlot, effectiveSubject, effectiveFaculty, effectiveRoom, effectiveBatch]
+            'INSERT INTO timetable_schedules (day, time_slot, subject_name, faculty_name, room) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+            [effectiveDay, effectiveTimeSlot, effectiveSubject, effectiveFaculty, effectiveRoom]
         );
         res.status(201).json({ message: 'Schedule added successfully', schedule: rows[0] });
+        logActivity(`New schedule slot allocated for ${effectiveSubject}`, 'schedule');
     } catch (error) {
         console.error('Error adding schedule:', error);
         res.status(500).json({ message: 'Server error while adding schedule' });
@@ -396,13 +419,14 @@ const getSchedules = async (req, res) => {
 const updateSchedule = async (req, res) => {
     try {
         const { id } = req.params;
-        const { day, time_slot, subject_name, faculty_name, room, batch } = req.body;
+        const { day, time_slot, subject_name, faculty_name, room } = req.body;
         
         await db.query(
-            'UPDATE timetable_schedules SET day = $1, time_slot = $2, subject_name = $3, faculty_name = $4, room = $5, batch = $6 WHERE id = $7',
-            [day, time_slot, subject_name, faculty_name, room, batch, id]
+            'UPDATE timetable_schedules SET day = $1, time_slot = $2, subject_name = $3, faculty_name = $4, room = $5 WHERE id = $6',
+            [day, time_slot, subject_name, faculty_name, room, id]
         );
         res.json({ message: 'Schedule updated successfully' });
+        logActivity(`Schedule updated for ${subject_name}`, 'schedule');
     } catch (error) {
         console.error('Error updating schedule:', error);
         res.status(500).json({ error: 'Server error while updating timetable' });
@@ -435,9 +459,10 @@ const addNotice = async (req, res) => {
         let finalStartTime = start_time ? new Date(start_time) : new Date();
         let finalExpiresAt = expires_at ? new Date(expires_at) : null;
 
-        // If duration is provided but no expiry, calculate it
-        if (!finalExpiresAt && duration_hours && !isNaN(duration_hours)) {
-            finalExpiresAt = new Date(finalStartTime.getTime() + (duration_hours * 60 * 60 * 1000));
+        // If duration is provided, it always overrides or sets expiry based on start_time
+        if (duration_hours && !isNaN(duration_hours)) {
+            const hrs = parseInt(duration_hours, 10);
+            finalExpiresAt = new Date(finalStartTime.getTime() + (hrs * 60 * 60 * 1000));
         }
 
         const { rows } = await db.query(
@@ -450,6 +475,7 @@ const addNotice = async (req, res) => {
             message: 'Notice published successfully', 
             notice: rows[0] 
         });
+        logActivity(`Broadcast notice published: ${title}`, 'notice');
     } catch (error) {
         console.error('Error adding notice:', error);
         res.status(500).json({ message: 'Server error while publishing notice: ' + error.message });
@@ -502,6 +528,7 @@ const deleteNotice = async (req, res) => {
         const { id } = req.params;
         await db.query('DELETE FROM campus_notices WHERE id = $1', [id]);
         res.json({ message: 'Notice deleted successfully' });
+        logActivity(`Notice ID ${id} removed`, 'notice');
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
@@ -523,6 +550,7 @@ const uploadBlueprint = async (req, res) => {
             [originalname, filename, mimetype, size, 'Admin']
         );
         res.status(201).json({ message: 'Blueprint uploaded successfully', blueprint: rows[0] });
+        logActivity(`Blueprint uploaded: ${originalname}`, 'infrastructure');
     } catch (error) {
         console.error('Error uploading blueprint:', error);
         res.status(500).json({ message: 'Server error while uploading blueprint' });
@@ -552,6 +580,7 @@ const deleteBlueprint = async (req, res) => {
         }
         await db.query('DELETE FROM campus_blueprints WHERE id = $1', [id]);
         res.json({ message: 'Blueprint deleted successfully' });
+        logActivity(`Blueprint ID ${id} deleted`, 'infrastructure');
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
@@ -563,9 +592,43 @@ const deleteSchedule = async (req, res) => {
         const { id } = req.params;
         await db.query('DELETE FROM timetable_schedules WHERE id = $1', [id]);
         res.json({ message: 'Schedule deleted successfully' });
+        logActivity(`Schedule ID ${id} removed`, 'schedule');
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Server error while deleting schedule' });
+    }
+};
+
+const getActivities = async (req, res) => {
+    try {
+        const { rows } = await db.query('SELECT * FROM system_activities ORDER BY created_at DESC LIMIT 15');
+        res.json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error fetching activities' });
+    }
+};
+
+const addActivity = async (req, res) => {
+    try {
+        const { message, type } = req.body;
+        await logActivity(message, type);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Fail' });
+    }
+};
+
+const checkEmail = async (req, res) => {
+    try {
+        const { email } = req.query;
+        if (!email) return res.status(400).json({ error: 'Email required' });
+
+        const { rows } = await db.query('SELECT id FROM users WHERE email = $1', [email.toLowerCase().trim()]);
+        res.json({ exists: rows.length > 0 });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error' });
     }
 };
 
@@ -573,5 +636,6 @@ module.exports = {
     addUser, getUsers, deleteUser, updateUser, getStats, getIssues, updateIssueStatus, 
     addSubject, getSubjects, updateSubject, deleteSubject, addSchedule, getSchedules, updateSchedule, deleteSchedule,
     addNotice, getNotices, deleteNotice, resetPassword,
-    uploadBlueprint, getBlueprints, deleteBlueprint
+    uploadBlueprint, getBlueprints, deleteBlueprint,
+    getActivities, addActivity, checkEmail
 };

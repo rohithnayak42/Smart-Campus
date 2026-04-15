@@ -29,10 +29,15 @@ const createUserTable = async () => {
             ALTER TABLE users ADD COLUMN current_status VARCHAR(50) DEFAULT 'Off Duty';
         END IF;
 
-        -- Normalize roles
+        -- Normalize roles (Migration to Plural Format)
+        UPDATE users SET role = 'students' WHERE role ILIKE 'student';
+        UPDATE users SET role = 'workers' WHERE role ILIKE 'worker';
+        UPDATE users SET role = 'guards' WHERE role ILIKE 'guard' OR role ILIKE 'security';
         UPDATE users SET role = 'staff' WHERE role ILIKE 'faculty' OR role ILIKE 'professor';
-        UPDATE users SET role = 'guard' WHERE role ILIKE 'security guard' OR role ILIKE 'security';
-        UPDATE users SET role = LOWER(role) WHERE role NOT IN ('staff', 'guard', 'student', 'worker', 'admin');
+        
+        -- Final Clean up
+        UPDATE users SET role = LOWER(role) 
+        WHERE role NOT IN ('staff', 'guards', 'students', 'workers', 'admin');
     END $$;
     `;
     
@@ -57,7 +62,6 @@ const createUserTable = async () => {
                 subject_name VARCHAR(100) NOT NULL,
                 faculty_name VARCHAR(100),
                 room VARCHAR(50),
-                batch VARCHAR(50),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
 
@@ -183,6 +187,13 @@ const createUserTable = async () => {
                 subject VARCHAR(100) NOT NULL,
                 description TEXT,
                 file_url VARCHAR(255),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS system_activities (
+                id SERIAL PRIMARY KEY,
+                message TEXT NOT NULL,
+                type VARCHAR(50) NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
         `);

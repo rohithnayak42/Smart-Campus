@@ -23,18 +23,22 @@ const getSharedSubjects = async (req, res) => {
     }
 };
 
-// Student Timetable
+// Student Timetable (Single Batch System)
 const getStudentTimetable = async (req, res) => {
     try {
-        // First get student's batch
-        const userRes = await db.query('SELECT batch FROM users WHERE id = $1', [req.user.id]);
-        const batch = userRes.rows[0]?.batch;
-        
-        if (!batch) return res.json([]); // No batch assigned
-
         const { rows } = await db.query(
-            'SELECT * FROM timetable_schedules WHERE batch = $1 ORDER BY day, time_slot',
-            [batch]
+            `SELECT * FROM timetable_schedules 
+             ORDER BY 
+                CASE day 
+                    WHEN 'Monday' THEN 1 
+                    WHEN 'Tuesday' THEN 2 
+                    WHEN 'Wednesday' THEN 3 
+                    WHEN 'Thursday' THEN 4 
+                    WHEN 'Friday' THEN 5 
+                    WHEN 'Saturday' THEN 6 
+                    WHEN 'Sunday' THEN 7 
+                END, 
+                time_slot ASC`
         );
         res.json(rows);
     } catch (error) {
@@ -48,9 +52,22 @@ const getFacultySchedule = async (req, res) => {
     try {
         const userRes = await db.query('SELECT name FROM users WHERE id = $1', [req.user.id]);
         const name = userRes.rows[0]?.name;
+        if (!name) return res.json([]);
 
         const { rows } = await db.query(
-            'SELECT * FROM timetable_schedules WHERE faculty_name = $1 ORDER BY day, time_slot',
+            `SELECT * FROM timetable_schedules 
+             WHERE faculty_name ILIKE $1 
+             ORDER BY 
+                CASE day 
+                    WHEN 'Monday' THEN 1 
+                    WHEN 'Tuesday' THEN 2 
+                    WHEN 'Wednesday' THEN 3 
+                    WHEN 'Thursday' THEN 4 
+                    WHEN 'Friday' THEN 5 
+                    WHEN 'Saturday' THEN 6 
+                    WHEN 'Sunday' THEN 7 
+                END, 
+                time_slot ASC`,
             [name]
         );
         res.json(rows);

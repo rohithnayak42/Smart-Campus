@@ -47,8 +47,8 @@ app.get('/', (req, res) => {
 
 
 
-// DB Init - DEFERRED to /api/health for zero-blocking startup
-// createUserTable();
+// DB Init - Ensuring schema is ready on startup
+createUserTable();
 
 // API Routes
 const authRoutes = require('./routes/authRoutes');

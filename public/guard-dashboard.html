@@ -750,7 +750,7 @@
                 
                 if (notices.length > 0) {
                     banner.style.display = 'flex';
-                    marquee.innerHTML = notices.map(n => `📢 ${n.title} - ${n.content}`).join("   •   ");
+                    marquee.innerHTML = notices.map(n => `📢 ${n.title}: ${n.content}`).join("   •   ");
                 } else {
                     banner.style.display = 'none';
                 }

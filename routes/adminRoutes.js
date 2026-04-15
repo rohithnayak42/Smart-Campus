@@ -56,9 +56,14 @@ router.delete('/notices/:id', adminMiddleware, deleteNotice);
 
 // Miscellaneous
 router.post('/reset-password', adminMiddleware, resetPassword);
+router.get('/check-email', adminMiddleware, require('../controllers/adminController').checkEmail);
 router.post('/upload-blueprint', adminMiddleware, upload.single('file'), uploadBlueprint); // Changed 'blueprint' to 'file' for simplicity
 router.get('/blueprints', adminMiddleware, getBlueprints);
 router.delete('/blueprints/:id', adminMiddleware, deleteBlueprint);
+
+// Activity Monitoring
+router.get('/activities', adminMiddleware, require('../controllers/adminController').getActivities);
+router.post('/activities', adminMiddleware, require('../controllers/adminController').addActivity);
 
 module.exports = router;
 

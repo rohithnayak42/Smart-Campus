@@ -350,10 +350,10 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        .bg-student { background: #DCFCE7; color: #166534; }
-        .bg-faculty { background: #F3E8FF; color: #6B21A8; }
-        .bg-guard { background: #DBEAFE; color: #1E40AF; }
-        .bg-worker { background: #FFEDD5; color: #9A3412; }
+        .bg-students { background: #DCFCE7; color: #166534; }
+        .bg-staff { background: #F3E8FF; color: #6B21A8; }
+        .bg-guards { background: #DBEAFE; color: #1E40AF; }
+        .bg-workers { background: #FFEDD5; color: #9A3412; }
         .bg-admin { background: #111827; color: white; }
 
         .action-icon {
@@ -491,6 +491,47 @@
         .role-pill:hover { background: #E2E8F0; }
         .role-pill.selected { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
 
+        /* Activity Items Styles */
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px 18px;
+            border-radius: 12px;
+            background: #F8FAFC;
+            border: 1px solid rgba(0,0,0,0.02);
+            transition: var(--transition);
+        }
+        .activity-item:hover {
+            transform: translateX(5px);
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        }
+        .activity-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .dot-user { background: #3B82F6; box-shadow: 0 0 8px rgba(59, 130, 246, 0.4); }
+        .dot-notice { background: #F59E0B; box-shadow: 0 0 8px rgba(245, 158, 11, 0.4); }
+        .dot-academic { background: #8B5CF6; box-shadow: 0 0 8px rgba(139, 92, 246, 0.4); }
+        .dot-schedule { background: #10B981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.4); }
+        .dot-issue { background: #EF4444; box-shadow: 0 0 8px rgba(239, 68, 68, 0.4); }
+        .dot-infrastructure { background: #64748B; box-shadow: 0 0 8px rgba(100, 116, 139, 0.4); }
+
+        .activity-msg { font-size: 13px; font-weight: 500; color: var(--primary-text); flex: 1; }
+        .activity-time { font-size: 11px; color: var(--secondary-text); font-weight: 600; white-space: nowrap; }
+
+        .error-text {
+            color: #EF4444;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: -10px;
+            margin-bottom: 5px;
+            display: none;
+            padding-left: 5px;
+        }
+
     </style>
 </head>
 <body>
@@ -627,11 +668,11 @@
             </div>
 
             <div class="filter-system">
-                <button class="filter-pill active" onclick="setFilter('All', this)">All Stakeholders</button>
-                <button class="filter-pill" onclick="setFilter('student', this)">Students</button>
+                <button class="filter-pill active" onclick="setFilter('all', this)">All Stakeholders</button>
+                <button class="filter-pill" onclick="setFilter('students', this)">Students</button>
                 <button class="filter-pill" onclick="setFilter('staff', this)">Staff</button>
-                <button class="filter-pill" onclick="setFilter('guard', this)">Guards</button>
-                <button class="filter-pill" onclick="setFilter('worker', this)">Workers</button>
+                <button class="filter-pill" onclick="setFilter('guards', this)">Guards</button>
+                <button class="filter-pill" onclick="setFilter('workers', this)">Workers</button>
                 <button class="filter-pill" onclick="setFilter('admin', this)">ADMINS</button>
             </div>
 
@@ -783,14 +824,15 @@
              <h2 style="margin-bottom: 25px;">Onboard New stakeholder</h2>
              <form id="u-form" style="display: grid; gap:15px;">
                   <input type="text" name="name" class="form-input" placeholder="Full Name" required>
-                  <input type="email" name="loginEmail" class="form-input" placeholder="Campus Email (login email)" required>
+                  <input type="email" name="loginEmail" id="u-loginEmail" class="form-input" placeholder="Campus Email (login email)" required oninput="validateOnboardEmail(this.value)">
+                  <div id="u-email-error" class="error-text">Email already assigned to another user</div>
                   <input type="email" name="realEmail" class="form-input" placeholder="Personal Email (send credentials)" required>
                   <select name="role" class="form-input" required>
                        <option value="admin">Admin</option>
-                       <option value="student">Student</option>
+                       <option value="students">Student</option>
                        <option value="staff">Staff</option>
-                       <option value="worker">Worker</option>
-                       <option value="guard">Security Guard</option>
+                       <option value="workers">Worker</option>
+                       <option value="guards">Security Guard</option>
                   </select>
                   <input type="password" name="password" id="u-password" class="form-input" placeholder="Default Password" required>
                   <input type="password" name="confirmPassword" id="u-confirmPassword" class="form-input" placeholder="Confirm Password" required>
@@ -805,14 +847,15 @@
              <form id="u-edit-form" style="display: grid; gap:15px;">
                   <input type="hidden" name="id" id="edit-id">
                   <input type="text" name="name" id="edit-name" class="form-input" placeholder="Full Name" required>
-                  <input type="email" name="loginEmail" id="edit-loginEmail" class="form-input" placeholder="Campus Email (login email)" required>
+                  <input type="email" name="loginEmail" id="edit-loginEmail" class="form-input" placeholder="Campus Email (login email)" required oninput="validateEditEmail(this.value)">
+                  <div id="edit-email-error" class="error-text">Email already assigned to another user</div>
                   <input type="email" name="realEmail" id="edit-realEmail" class="form-input" placeholder="Personal Email" required>
                   <select name="role" id="edit-role" class="form-input" required>
                        <option value="admin">Admin</option>
-                       <option value="student">Student</option>
+                       <option value="students">Student</option>
                        <option value="staff">Staff</option>
-                       <option value="worker">Worker</option>
-                       <option value="guard">Security Guard</option>
+                       <option value="workers">Worker</option>
+                       <option value="guards">Security Guard</option>
                   </select>
                   <button type="submit" class="btn-primary" style="margin-top: 15px;">✅ Update User</button>
              </form>
@@ -886,7 +929,7 @@
         </div>
     </div>
 
-    <div id="mod-time" class="glass-modal" onclick="closeM(event, 'mod-time')"><div class="modal-body"><h2>Allocate Resource</h2><form id="t-form" style="display:grid; gap:12px;"><select name="day" id="t-day" class="form-input"><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option></select><input type="text" name="timeSlot" id="t-timeSlot" class="form-input" placeholder="Time (e.g. 09:00 - 10:30)"><input type="text" name="subjectName" id="t-subjectName" class="form-input" placeholder="Subject Name"><input type="text" name="facultyName" id="t-facultyName" class="form-input" placeholder="Faculty Name"><input type="text" name="room" id="t-room" class="form-input" placeholder="Room Number"><input type="text" name="batch" id="t-batch" class="form-input" placeholder="Batch (e.g. CSE-A)"><button type="submit" class="btn-primary">Register Slot</button></form></div></div>
+    <div id="mod-time" class="glass-modal" onclick="closeM(event, 'mod-time')"><div class="modal-body"><h2>Allocate Resource</h2><form id="t-form" style="display:grid; gap:12px;"><select name="day" id="t-day" class="form-input"><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option></select><input type="text" name="time_slot" id="t-time_slot" class="form-input" placeholder="Time (e.g. 09:00 - 10:30)"><input type="text" name="subject_name" id="t-subject_name" class="form-input" placeholder="Subject Name"><input type="text" name="faculty_name" id="t-faculty_name" class="form-input" placeholder="Faculty Name"><input type="text" name="room" id="t-room" class="form-input" placeholder="Room Number"><button type="submit" class="btn-primary">Register Slot</button></form></div></div>
     
     <div id="mod-edit-time" class="glass-modal" onclick="closeM(event, 'mod-edit-time')">
         <div class="modal-body">
@@ -900,7 +943,6 @@
                 <input type="text" name="subject_name" id="edit-time-subject" class="form-input" placeholder="Subject" required>
                 <input type="text" name="faculty_name" id="edit-time-faculty" class="form-input" placeholder="Faculty">
                 <input type="text" name="room" id="edit-time-room" class="form-input" placeholder="Room">
-                <input type="text" name="batch" id="edit-time-batch" class="form-input" placeholder="Batch">
                 <div style="display: flex; gap: 15px; margin-top: 10px;">
                     <button type="button" class="btn-secondary" style="background: #E5E7EB; color: #374151; flex: 1;" onclick="document.getElementById('mod-edit-time').style.display='none'">Cancel</button>
                     <button type="submit" class="btn-primary" style="flex: 1;">✅ Update Slot</button>
@@ -948,11 +990,11 @@
                       </div>
                       <div>
                           <label style="font-size: 11px; font-weight: 800; color: var(--secondary-text); margin-bottom: 8px; display: block; text-transform: uppercase;">Duration (Hrs)</label>
-                          <input type="number" name="duration_hours" class="form-input" placeholder="e.g. 24" min="1">
+                          <input type="number" name="duration_hours" id="n-duration" class="form-input" placeholder="e.g. 24" min="1">
                       </div>
                       <div>
                           <label style="font-size: 11px; font-weight: 800; color: var(--secondary-text); margin-bottom: 8px; display: block; text-transform: uppercase;">Expiry Time</label>
-                          <input type="datetime-local" name="expires_at" class="form-input">
+                          <input type="datetime-local" name="expires_at" id="n-expiry" class="form-input">
                       </div>
                   </div>
 
@@ -1004,7 +1046,8 @@
             if (navLink) navLink.classList.add('active');
             // Load data for the tab
             loadStat();
-            if (id === 'users') loadUsrs();
+            if (id === 'overview') loadAct();
+            else if (id === 'users') loadUsrs();
             else if (id === 'subjects') loadSubj();
             else if (id === 'timetable') loadTim();
             else if (id === 'notices') loadNot();
@@ -1022,7 +1065,8 @@
 
         async function refreshData(tabId) {
             loadStat();
-            if (tabId === 'users') loadUsrs();
+            if (tabId === 'overview') loadAct();
+            else if (tabId === 'users') loadUsrs();
             else if (tabId === 'subjects') loadSubj();
             else if (tabId === 'timetable') loadTim();
             else if (tabId === 'notices') loadNot();
@@ -1065,14 +1109,84 @@
             }
         }
 
-        async function loadUsrs(f = 'All') {
-            const res = await fetch(`/api/admin/users?role=${f}`, { headers: { 'Authorization': `Bearer ${tok}` } });
-            const u = await res.json();
+        async function loadAct() {
+            try {
+                const res = await fetch('/api/admin/activities', { headers: { 'Authorization': `Bearer ${tok}` } });
+                const data = await res.json();
+                const logBox = document.getElementById('activity-log');
+                
+                if (data.length === 0) {
+                    logBox.innerHTML = `
+                        <div style="padding: 40px; text-align: center; color: var(--secondary-text);">
+                            <i data-lucide="shield" style="width: 32px; opacity: 0.2; margin-bottom: 10px;"></i>
+                            <p style="font-size: 13px;">System nodes operational. No critical activity logged.</p>
+                        </div>`;
+                    if (window.lucide) lucide.createIcons();
+                    return;
+                }
+
+                logBox.innerHTML = '';
+                data.forEach(act => {
+                    const timeStr = new Date(act.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const dateStr = new Date(act.created_at).toLocaleDateString();
+                    const now = new Date().toLocaleDateString();
+                    const finalTime = dateStr === now ? timeStr : `${dateStr} ${timeStr}`;
+
+                    logBox.innerHTML += `
+                        <div class="activity-item">
+                            <div class="activity-dot dot-${act.type}"></div>
+                            <div class="activity-msg">${act.message}</div>
+                            <div class="activity-time">${finalTime}</div>
+                        </div>
+                    `;
+                });
+            } catch (e) {
+                console.error('Activity load error:', e);
+            }
+        }
+
+        let allUsers = [];
+        let activeRoleFilter = 'all';
+
+        async function loadUsrs() {
+            try {
+                // Fetch all users once; we'll filter them client-side for speed
+                const res = await fetch(`/api/admin/users?role=all`, { headers: { 'Authorization': `Bearer ${tok}` } });
+                allUsers = await res.json();
+                renderUsers();
+            } catch (err) {
+                console.error('Error fetching users:', err);
+                tBox('⚠️ Connection Error: Failed to fetch users');
+            }
+        }
+
+        function renderUsers() {
             const b = document.getElementById('user-rows');
+            const searchVal = document.getElementById('u-search').value.toLowerCase();
+            
+            // 1. FILTER by Role
+            let filtered = activeRoleFilter === 'all' 
+                ? allUsers 
+                : allUsers.filter(u => u.role.toLowerCase() === activeRoleFilter.toLowerCase());
+
+            // 2. FILTER by Search Input
+            if (searchVal) {
+                filtered = filtered.filter(u => 
+                    u.name.toLowerCase().includes(searchVal) || 
+                    u.login_email.toLowerCase().includes(searchVal) ||
+                    (u.real_email && u.real_email.toLowerCase().includes(searchVal))
+                );
+            }
+
             b.innerHTML = '';
-            u.forEach(x => {
-                const r = x.role.toLowerCase();
-                const bc = r === 'student' ? 'bg-student' : r === 'staff' ? 'bg-faculty' : r === 'guard' ? 'bg-guard' : r === 'worker' ? 'bg-worker' : 'bg-admin';
+            filtered.forEach(x => {
+                const r = (x.role || '').toLowerCase();
+                const bc = r === 'students' ? 'bg-students' : 
+                          r === 'staff' ? 'bg-staff' : 
+                          r === 'guards' ? 'bg-guards' : 
+                          r === 'workers' ? 'bg-workers' : 
+                          'bg-admin';
+                
                 b.innerHTML += `
                     <tr>
                         <td style="padding-left: 30px;">
@@ -1086,7 +1200,7 @@
                         </td>
                         <td>
                             <span class="badge-role ${bc}">${x.role}</span>
-                            ${r === 'guard' && x.current_status ? `<div style="margin-top:6px; font-size:10px; font-weight:700; color:var(--accent); text-transform:uppercase;">[ ${x.current_status} ]</div>` : ''}
+                            ${r === 'guards' && x.current_status ? `<div style="margin-top:6px; font-size:10px; font-weight:700; color:var(--accent); text-transform:uppercase;">[ ${x.current_status} ]</div>` : ''}
                         </td>
                         <td><div style="font-size:12px; font-weight:500; color:var(--secondary-text);">${x.login_email}</div></td>
                         <td>
@@ -1104,18 +1218,22 @@
                     </tr>
                 `;
             });
+
             lucide.createIcons();
-            
+            attachPwHandlers();
+        }
+
+        function attachPwHandlers() {
             document.querySelectorAll('.pw-col').forEach(col => {
                 col.addEventListener('mouseenter', () => {
                     if(!col.querySelector('.pw-toggle')) {
                         col.innerHTML += `<i data-lucide="eye" class="pw-toggle" style="width: 14px; cursor: pointer; color: #6366F1;" title="View password"></i>`;
                         lucide.createIcons();
-                        col.querySelector('.pw-toggle').addEventListener('click', () => {
+                        col.querySelector('.pw-toggle').onclick = () => {
                             const span = col.querySelector('span');
                             const pwd = col.getAttribute('data-pw');
                             if(span.textContent === '********') {
-                                span.textContent = pwd && pwd !== 'null' ? pwd : 'User Defined'; // fallback if password cleared
+                                span.textContent = pwd && pwd !== 'null' ? pwd : 'User Defined';
                                 col.querySelector('.pw-toggle').setAttribute('data-lucide', 'eye-off');
                                 setTimeout(() => {
                                     span.textContent = '********';
@@ -1127,7 +1245,7 @@
                                 col.querySelector('.pw-toggle').setAttribute('data-lucide', 'eye');
                             }
                             lucide.createIcons();
-                        });
+                        };
                     }
                 });
                 col.addEventListener('mouseleave', () => {
@@ -1140,7 +1258,75 @@
         function setFilter(role, el) {
             document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
             el.classList.add('active');
-            loadUsrs(role);
+            activeRoleFilter = role;
+            renderUsers();
+        }
+
+        function searchUsers() {
+            renderUsers();
+        }
+
+        // Real-time Email Validation Logic
+        let onboardDebounce = null;
+        async function validateOnboardEmail(email) {
+            const errDiv = document.getElementById('u-email-error');
+            const submitBtn = document.querySelector('#u-form button[type="submit"]');
+            
+            if (!email || !email.includes('@')) {
+                errDiv.style.display = 'none';
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+                return;
+            }
+
+            if (onboardDebounce) clearTimeout(onboardDebounce);
+            onboardDebounce = setTimeout(async () => {
+                const res = await fetch(`/api/admin/check-email?email=${encodeURIComponent(email)}`, { 
+                    headers: { 'Authorization': `Bearer ${tok}` } 
+                });
+                const { exists } = await res.json();
+                if (exists) {
+                    errDiv.style.display = 'block';
+                    submitBtn.disabled = true;
+                    submitBtn.style.opacity = '0.5';
+                } else {
+                    errDiv.style.display = 'none';
+                    submitBtn.disabled = false;
+                    submitBtn.style.opacity = '1';
+                }
+            }, 500);
+        }
+
+        let editDebounce = null;
+        let originalEditEmail = ''; // To prevent flagging the same email as duplicate during edit
+
+        async function validateEditEmail(email) {
+            const errDiv = document.getElementById('edit-email-error');
+            const submitBtn = document.querySelector('#u-edit-form button[type="submit"]');
+
+            if (!email || email === originalEditEmail) {
+                errDiv.style.display = 'none';
+                submitBtn.disabled = false;
+                submitBtn.style.opacity = '1';
+                return;
+            }
+
+            if (editDebounce) clearTimeout(editDebounce);
+            editDebounce = setTimeout(async () => {
+                const res = await fetch(`/api/admin/check-email?email=${encodeURIComponent(email)}`, { 
+                    headers: { 'Authorization': `Bearer ${tok}` } 
+                });
+                const { exists } = await res.json();
+                if (exists) {
+                    errDiv.style.display = 'block';
+                    submitBtn.disabled = true;
+                    submitBtn.style.opacity = '0.5';
+                } else {
+                    errDiv.style.display = 'none';
+                    submitBtn.disabled = false;
+                    submitBtn.style.opacity = '1';
+                }
+            }, 500);
         }
 
         document.getElementById('u-form').onsubmit = async (e) => {
@@ -1199,8 +1385,15 @@
             document.getElementById('edit-id').value = userToEdit.id;
             document.getElementById('edit-name').value = userToEdit.name;
             document.getElementById('edit-loginEmail').value = userToEdit.loginEmail;
+            originalEditEmail = userToEdit.loginEmail; // Store the original to avoid self-collision
             document.getElementById('edit-realEmail').value = userToEdit.realEmail && userToEdit.realEmail !== 'null' ? userToEdit.realEmail : userToEdit.loginEmail;
             document.getElementById('edit-role').value = userToEdit.role;
+            
+            // Reset error state
+            document.getElementById('edit-email-error').style.display = 'none';
+            document.querySelector('#u-edit-form button[type="submit"]').disabled = false;
+            document.querySelector('#u-edit-form button[type="submit"]').style.opacity = '1';
+            
             openModal('mod-edit-user');
         }
 
@@ -1417,19 +1610,16 @@
                                 </div>
                             </div>
                             <h4 style="font-size:16px; font-weight:800; color:var(--primary-text); margin-bottom:15px; border-left: 3px solid #C5A880; padding-left: 12px;">${x.subject_name}</h4>
-                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; border-top:1px solid rgba(0,0,0,0.05); padding-top:15px; margin-top:5px;">
+                            <div style="display:grid; grid-template-columns: 1fr; gap:10px; border-top:1px solid rgba(0,0,0,0.05); padding-top:15px; margin-top:5px;">
                                 <div style="font-size:11px; color:var(--secondary-text); display:flex; align-items:center;">
                                     <i data-lucide="map-pin" style="width:11px; height:11px; margin-right:5px; color:#C5A880;"></i><strong>Room:</strong>&nbsp;${x.room || 'N/A'}
-                                </div>
-                                <div style="font-size:11px; color:var(--secondary-text); display:flex; align-items:center;">
-                                    <i data-lucide="users" style="width:11px; height:11px; margin-right:5px; color:#C5A880;"></i><strong>Batch:</strong>&nbsp;${x.batch || 'All'}
                                 </div>
                             </div>
                             <div style="margin-top:12px; font-size:11px; color:var(--secondary-text); font-style:italic; border-top: 1px dotted rgba(0,0,0,0.05); padding-top: 8px; display:flex; align-items:center;">
                                 <i data-lucide="user" style="width:11px; height:11px; margin-right:5px; opacity:0.6;"></i>${x.faculty_name || 'Unassigned Faculty'}
                             </div>
                             <div style="position:absolute; bottom:20px; right:20px; display:flex; gap:12px;">
-                                <i data-lucide="edit-3" class="action-icon i-edit" style="width:14px; height:14px; opacity:0.6; cursor:pointer;" onclick="handleSchEditClick(${x.id}, '${x.day}', '${x.time_slot}', '${x.subject_name.replace(/'/g, "\\'")}', '${(x.faculty_name || '').replace(/'/g, "\\'")}', '${(x.room || '').replace(/'/g, "\\'")}', '${(x.batch || '').replace(/'/g, "\\'")}')"></i>
+                                <i data-lucide="edit-3" class="action-icon i-edit" style="width:14px; height:14px; opacity:0.6; cursor:pointer;" onclick="handleSchEditClick(${x.id}, '${x.day}', '${x.time_slot}', '${x.subject_name.replace(/'/g, "\\'")}', '${(x.faculty_name || '').replace(/'/g, "\\'")}', '${(x.room || '').replace(/'/g, "\\'")}')"></i>
                                 <i data-lucide="trash-2" class="action-icon i-del" style="width:14px; height:14px; color:#EF4444; opacity:0.6; cursor:pointer;" onclick="deleteSch(${x.id})"></i>
                             </div>
                         </div>
@@ -1494,14 +1684,13 @@
             }
         }
 
-        function handleSchEditClick(id, day, slot, subject, faculty, room, batch) {
+        function handleSchEditClick(id, day, slot, subject, faculty, room) {
             document.getElementById('edit-time-id').value = id;
             document.getElementById('edit-time-day').value = day;
             document.getElementById('edit-time-slot').value = slot;
             document.getElementById('edit-time-subject').value = subject;
             document.getElementById('edit-time-faculty').value = faculty;
             document.getElementById('edit-time-room').value = room;
-            document.getElementById('edit-time-batch').value = batch;
             document.getElementById('mod-edit-time').style.display = 'flex';
         }
 
@@ -1647,6 +1836,9 @@
                 audience: selectedRoles
             };
 
+            // Ensure duration is sent as number
+            if(data.duration_hours) data.duration_hours = parseInt(data.duration_hours);
+
             btn.disabled = true;
             btn.textContent = 'Transmitting... ⚡';
 
@@ -1772,6 +1964,47 @@
         function logout() { document.getElementById('mod-logout-confirm').style.display='flex'; }
         function confirmLogout() { localStorage.clear(); window.location.href='/auth.html'; }
 
+        function updateNoticeExpiry() {
+            const startInput = document.getElementById('n-start-time');
+            const durationInput = document.getElementById('n-duration');
+            const expiryInput = document.getElementById('n-expiry');
+
+            if (!startInput.value || !durationInput.value) return;
+            
+            const start = new Date(startInput.value);
+            const duration = parseInt(durationInput.value);
+
+            if (!isNaN(start.getTime()) && !isNaN(duration) && duration > 0) {
+                const expiry = new Date(start.getTime() + duration * 60 * 60 * 1000);
+                const year = expiry.getFullYear();
+                const month = String(expiry.getMonth() + 1).padStart(2, '0');
+                const day = String(expiry.getDate()).padStart(2, '0');
+                const hours = String(expiry.getHours()).padStart(2, '0');
+                const minutes = String(expiry.getMinutes()).padStart(2, '0');
+                expiryInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+            }
+        }
+
+        document.getElementById('n-start-time').addEventListener('change', updateNoticeExpiry);
+        document.getElementById('n-duration').addEventListener('input', updateNoticeExpiry);
+
+        // Enhance openModal to handle notice initialization
+        const originalOpenModal = openModal;
+        openModal = function(id) {
+            if (id === 'mod-notice') {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                document.getElementById('n-start-time').value = `${year}-${month}-${day}T${hours}:${minutes}`;
+                document.getElementById('n-duration').value = '24'; // Default 24h
+                updateNoticeExpiry();
+            }
+            originalOpenModal(id);
+        };
+
         // Notice Bar Logic
         async function updateNoticeBar() {
             try {
@@ -1785,7 +2018,7 @@
                 
                 if (notices.length > 0) {
                     banner.style.display = 'flex';
-                    marquee.innerHTML = notices.map(n => `📢 ${n.title} - ${n.content}`).join("   •   ");
+                    marquee.innerHTML = notices.map(n => `📢 ${n.title}: ${n.content}`).join("   •   ");
                 } else {
                     banner.style.display = 'none';
                 }
@@ -1802,6 +2035,7 @@
             if(ov) { ov.style.display = 'block'; ov.classList.add('active'); }
             if(window.lucide) lucide.createIcons();
             loadStat();
+            loadAct();
             updateNoticeBar();
 
             // REAL-TIME AUTO REFRESH (Polling Engine)

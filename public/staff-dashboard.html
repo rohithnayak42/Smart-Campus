@@ -545,7 +545,6 @@
                         <td style="font-weight:600;">${x.time_slot}</td>
                         <td>
                             <div style="font-weight:600; color:var(--primary-text);">${x.subject_name}</div>
-                            <div style="font-size:12px; color:var(--secondary-text);">Batch: ${x.batch}</div>
                         </td>
                         <td>${x.room ? `<a href="${x.room.includes('http') ? x.room : '#'}" style="color:var(--info-text); text-decoration:none;"><i data-lucide="map-pin" style="width:14px; display:inline-block; vertical-align:middle;"></i> Room ${x.room}</a>` : 'N/A'}</td>
                         <td><button class="btn-secondary" style="padding: 6px 12px; font-size:12px;" onclick="switchTab('attendance')">Take Attendance</button></td>
@@ -553,7 +552,7 @@
                 `).join('');
 
                 sel.innerHTML = '<option value="">Choose a schedule slot...</option>' + data.map(x => `
-                    <option value="${x.id}" data-batch="${x.batch}" data-subject="${x.subject_name}">${x.time_slot} - ${x.subject_name} (${x.batch})</option>
+                    <option value="${x.id}" data-subject="${x.subject_name}">${x.time_slot} - ${x.subject_name}</option>
                 `).join('');
                 if (window.lucide) lucide.createIcons();
             } catch(e) { console.error(e); }
@@ -569,11 +568,10 @@
             const opt = sel.options[sel.selectedIndex];
             attendanceTarget = {
                 id: sel.value,
-                batch: opt.getAttribute('data-batch'),
                 subject: opt.getAttribute('data-subject')
             };
-
-            const res = await fetch(`/api/stakeholder/students?batch=${attendanceTarget.batch}`, { headers: { 'Authorization': `Bearer ${tok}` } });
+ 
+            const res = await fetch(`/api/stakeholder/students`, { headers: { 'Authorization': `Bearer ${tok}` } });
             const students = await res.json();
 
             if (students.length === 0) {
@@ -581,7 +579,7 @@
                 return;
             }
 
-            document.getElementById('att-batch-info').textContent = `Target: ${attendanceTarget.subject} (Batch: ${attendanceTarget.batch})`;
+            document.getElementById('att-batch-info').textContent = `Target: ${attendanceTarget.subject}`;
             const rows = document.getElementById('attendance-rows');
             rows.innerHTML = students.map(s => `
                 <tr data-sid="${s.id}" data-sname="${s.name}">
@@ -610,7 +608,7 @@
             await fetch('/api/stakeholder/faculty/attendance', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tok}` },
-                body: JSON.stringify({ schedule_id: attendanceTarget.id, subject: attendanceTarget.subject, batch: attendanceTarget.batch })
+                body: JSON.stringify({ schedule_id: attendanceTarget.id, subject: attendanceTarget.subject })
             });
 
             // Now log the individual student statuses
@@ -620,7 +618,6 @@
                 body: JSON.stringify({
                     schedule_id: attendanceTarget.id,
                     subject: attendanceTarget.subject,
-                    batch: attendanceTarget.batch,
                     attendanceData: attendanceData
                 })
             });
@@ -830,7 +827,7 @@
                 
                 if (notices.length > 0) {
                     banner.style.display = 'flex';
-                    marquee.innerHTML = notices.map(n => `📢 ${n.title} - ${n.content}`).join("   •   ");
+                    marquee.innerHTML = notices.map(n => `📢 ${n.title}: ${n.content}`).join("   •   ");
                 } else {
                     banner.style.display = 'none';
                 }
