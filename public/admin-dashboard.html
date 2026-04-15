@@ -532,6 +532,30 @@
             padding-left: 5px;
         }
 
+
+        /* Live Notice Banner */
+        .live-notice-bar {
+            position: fixed;
+            top: 65px;
+            right: 0;
+            width: calc(100% - 280px);
+            background: #facc15;
+            color: black;
+            font-weight: 700;
+            padding: 10px 0;
+            z-index: 800;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex; /* overridden by inline style if hidden */
+            align-items: center;
+            font-size: 14px;
+        }
+        .live-notice-bar marquee {
+            flex: 1;
+            display: flex;
+            align-items: center;
+        }
+
     </style>
 </head>
 <body>
@@ -604,10 +628,6 @@
         </div>
         <button class="btn-secondary" style="margin-left: 15px; padding: 8px 12px; font-size: 12px;" onclick="logout()">Logout</button>
     </header>
-
-    <div id="live-notice-banner" class="live-notice-bar" style="display: none;">
-        <marquee id="live-marquee-content"></marquee>
-    </div>
 
     <main>
 
