@@ -112,16 +112,18 @@
 
         /* Unified Live Notice Bar */
         .live-notice-bar {
-            position: sticky;
-            top: 0;
+            position: fixed;
+            top: 65px;
+            right: 0;
+            width: calc(100% - 280px);
             background: #facc15;
             color: black;
             font-weight: 700;
             padding: 10px 0;
-            z-index: 9999;
+            z-index: 800;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             overflow: hidden;
-            display: flex;
+            display: flex; /* overridden by JS */
             align-items: center;
             font-size: 14px;
         }
