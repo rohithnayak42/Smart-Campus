@@ -66,15 +66,19 @@ const createUserTable = async () => {
                 title VARCHAR(200) NOT NULL,
                 message TEXT NOT NULL,
                 target_roles VARCHAR(100) DEFAULT 'Everyone',
+                start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 expires_at TIMESTAMP,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
 
-            -- Add expires_at column if missing on existing tables
+            -- Add expires_at and start_time columns if missing on existing tables
             DO $$
             BEGIN
                 IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='campus_notices' AND column_name='expires_at') THEN
                     ALTER TABLE campus_notices ADD COLUMN expires_at TIMESTAMP;
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='campus_notices' AND column_name='start_time') THEN
+                    ALTER TABLE campus_notices ADD COLUMN start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
                 END IF;
             END $$;
 

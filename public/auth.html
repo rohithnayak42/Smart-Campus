@@ -600,25 +600,41 @@
             btnText.innerHTML = `<i data-lucide="loader-2" class="spinner"></i> Signing in...`;
             if (window.lucide) lucide.createIcons();
 
+            // Optimized Timeout Safety: 10 seconds (standard for auth with DB/Email setup)
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000);
+
             try {
                 const res = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password, role })
+                    body: JSON.stringify({ email, password, role }),
+                    signal: controller.signal
                 });
+                
+                clearTimeout(timeoutId);
                 const data = await res.json();
+
                 if (!res.ok) {
                     errBox.textContent = data.message || "Invalid credentials. Please try again.";
                     errBox.style.display = 'block';
                 } else {
-                    if (data.step === 'OTP') showView('otp');
-                    else if (data.step === 'CHANGE_PASSWORD') {
+                    // Success is now instant because backend is non-blocking
+                    if (data.step === 'OTP') {
+                        showView('otp');
+                    } else if (data.step === 'CHANGE_PASSWORD') {
                         document.getElementById('change-pass-userid').value = data.userId;
                         showView('changePass');
-                    } else handleLoginSuccess(data.token, data.role.toLowerCase());
+                    } else {
+                        handleLoginSuccess(data.token, data.role.toLowerCase());
+                    }
                 }
             } catch (err) { 
-                errBox.textContent = 'Network error parsing authentication token.';
+                if (err.name === 'AbortError') {
+                    errBox.textContent = 'Login is taking longer than usual. Please try again in a moment.';
+                } else {
+                    errBox.textContent = 'Network error or server unavailable.';
+                }
                 errBox.style.display = 'block';
             } finally {
                 btn.disabled = false;

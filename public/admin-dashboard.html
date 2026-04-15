@@ -426,17 +426,77 @@
 
         /* Toast */
         .toast-box {
-            position: fixed; bottom: 30px; right: 30px;
-            background: #0F172A; color: white;
-            padding: 14px 28px; border-radius: 100px; font-weight: 600;
-            transform: translateY(100px); transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 3000;
+            position: fixed;
+            right: 0;
+            width: calc(100% - 280px);
+            background: #1E293B;
+            color: #C5A880;
+            padding: 10px 0;
+            z-index: 850;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid rgba(197, 168, 128, 0.3);
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-        .toast-box.active { transform: translateY(0); }
+
+        .notice-label {
+            background: #C5A880;
+            color: #1E293B;
+            padding: 3px 14px;
+            font-weight: 800;
+            font-size: 10px;
+            text-transform: uppercase;
+            margin-right: 20px;
+            margin-left: 20px;
+            border-radius: 6px;
+            white-space: nowrap;
+            z-index: 2;
+            box-shadow: 0 0 10px rgba(197, 168, 128, 0.3);
+            display: flex; align-items: center; gap: 5px;
+        }
+
+        .notice-marquee {
+            white-space: nowrap;
+            display: inline-block;
+            animation: marqueeScroll 30s linear infinite;
+            padding-left: 100%;
+        }
+
+        @keyframes marqueeScroll {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(-100%, 0); }
+        }
+
+        .notice-item {
+            margin-right: 80px;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            color: white;
+        }
+        .notice-item strong { color: var(--accent); }
+
+        /* Role Selection Pills */
+        .role-selection-grid {
+            display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;
+        }
+        .role-pill {
+            padding: 10px 18px; border-radius: 12px; background: #F1F5F9; color: #475569;
+            font-size: 13px; font-weight: 700; cursor: pointer; border: 2px solid transparent;
+            transition: all 0.2s ease; display: flex; align-items: center; gap: 8px;
+        }
+        .role-pill:hover { background: #E2E8F0; }
+        .role-pill.selected { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
 
     </style>
 </head>
 <body>
+    <div id="live-notice-banner" class="live-notice-bar" style="display: none;">
+        <marquee id="live-marquee-content"></marquee>
+    </div>
 
     <nav class="sidebar">
         <div class="sidebar-header">
@@ -491,19 +551,14 @@
             </div>
             <i data-lucide="settings" style="width: 14px; color: var(--secondary-text); margin-left:10px;"></i>
         </div>
-        <button class="btn-secondary" style="margin-left: 15px; padding: 8px 20px; font-size: 12px;" onclick="logout()">Logout</button>
+        <button class="btn-secondary" style="margin-left: 15px; padding: 8px 12px; font-size: 12px;" onclick="logout()">Logout</button>
     </header>
 
+    <div id="live-notice-banner" class="live-notice-bar" style="display: none;">
+        <marquee id="live-marquee-content"></marquee>
+    </div>
+
     <main>
-        <!-- Live Notice Bar -->
-        <div id="live-notice-wrapper" style="margin-bottom: 25px; display: none;">
-            <div style="background: #1e293b; color: #C5A880; padding: 12px 20px; border-radius: 12px; display:flex; align-items:center; gap:15px; overflow:hidden; border: 1px solid rgba(197, 168, 128, 0.3);">
-                <div style="display:flex; align-items:center; gap:8px; white-space:nowrap; font-weight:800; font-size:12px; border-right: 2px solid rgba(197, 168, 128, 0.3); padding-right:15px;">
-                    <i data-lucide="megaphone" style="width:16px;"></i> LIVE BROADCAST
-                </div>
-                <marquee id="live-notice-ticker" behavior="scroll" direction="left" style="font-weight:600; font-size:14px; color: white;"></marquee>
-            </div>
-        </div>
 
         <!-- Overview (Modern SaaS Style) -->
 
@@ -669,11 +724,19 @@
 
         <!-- Notices -->
         <div id="notices" class="tab-content">
-             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-                <h2 class="section-title" style="margin-bottom: 0;">Live Broadcasts</h2>
-                <button class="btn-secondary" onclick="openModal('mod-notice')">+ Transmit Notice</button>
+            <div class="course-hero-card">
+                <div class="hero-info">
+                    <h2>Campus Communications</h2>
+                    <p>Broadcast announcements, alerts, and schedules to specific stakeholder groups with time-based visibility.</p>
+                </div>
+                <button class="btn-primary" onclick="openModal('mod-notice')">+ Transmit Notice</button>
             </div>
-            <div id="notice-stack" style="display: grid; gap: 20px;"></div>
+
+            <div class="premium-table-wrap" style="padding: 25px; background: transparent; box-shadow: none; border: none;">
+                <div id="notice-stack" style="display: grid; gap: 20px;">
+                    <!-- Notice cards will be injected here -->
+                </div>
+            </div>
         </div>
 
         <!-- Blueprint -->
@@ -846,7 +909,62 @@
         </div>
     </div>
 
-    <div id="mod-notice" class="glass-modal" onclick="closeM(event, 'mod-notice')"><div class="modal-body"><h2>Compose Notice</h2><form id="n-form" style="display:grid; gap:12px;"><input type="text" name="title" class="form-input" placeholder="Heading"><select name="targetRoles" class="form-input"><option value="Everyone">Everyone</option><option value="student">Students</option><option value="staff">Staff</option><option value="guard">Guards</option><option value="worker">Workers</option></select><select name="duration_hours" class="form-input"><option value="1">1 Hour Duration</option><option value="24" selected>24 Hours Duration</option><option value="48">2 Days Duration</option><option value="0">Indefinite (No Expiry)</option></select><textarea name="message" class="form-input" style="height:100px;" placeholder="Message Body"></textarea><button type="submit" class="btn-secondary" style="width:100%">Broadast Identity</button></form></div></div>
+    <div id="mod-notice" class="glass-modal" onclick="closeM(event, 'mod-notice')">
+        <div class="modal-body" style="width: 550px;">
+             <h2 style="margin-bottom: 10px;">Transmit New Notice</h2>
+             <p style="color: var(--secondary-text); font-size: 13px; margin-bottom: 25px;">Broadcast announcements to targeted audience with scheduled visibility.</p>
+             
+             <form id="n-form">
+                  <div style="margin-bottom: 20px;">
+                      <label style="font-size: 11px; font-weight: 800; color: var(--secondary-text); margin-bottom: 8px; display: block; text-transform: uppercase;">Notice Title</label>
+                      <input type="text" name="title" class="form-input" placeholder="e.g. Semester Exam Schedule Announced" required>
+                  </div>
+
+                  <div style="margin-bottom: 20px;">
+                      <label style="font-size: 11px; font-weight: 800; color: var(--secondary-text); margin-bottom: 8px; display: block; text-transform: uppercase;">Target Audience (select one or more)</label>
+                      <div class="role-selection-grid">
+                          <div class="role-pill selected" data-role="Everyone" onclick="toggleRoleSelection(this)">
+                              <i data-lucide="globe" style="width:14px;"></i> Everyone
+                          </div>
+                          <div class="role-pill" data-role="student" onclick="toggleRoleSelection(this)">
+                              <i data-lucide="graduation-cap" style="width:14px;"></i> Students
+                          </div>
+                          <div class="role-pill" data-role="staff" onclick="toggleRoleSelection(this)">
+                              <i data-lucide="briefcase" style="width:14px;"></i> Staff / Faculty
+                          </div>
+                          <div class="role-pill" data-role="worker" onclick="toggleRoleSelection(this)">
+                              <i data-lucide="tool" style="width:14px;"></i> Workers
+                          </div>
+                          <div class="role-pill" data-role="guard" onclick="toggleRoleSelection(this)">
+                              <i data-lucide="shield" style="width:14px;"></i> Guards
+                          </div>
+                      </div>
+                  </div>
+
+                  <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                      <div>
+                          <label style="font-size: 11px; font-weight: 800; color: var(--secondary-text); margin-bottom: 8px; display: block; text-transform: uppercase;">Start Time</label>
+                          <input type="datetime-local" name="start_time" class="form-input" id="n-start-time">
+                      </div>
+                      <div>
+                          <label style="font-size: 11px; font-weight: 800; color: var(--secondary-text); margin-bottom: 8px; display: block; text-transform: uppercase;">Duration (Hrs)</label>
+                          <input type="number" name="duration_hours" class="form-input" placeholder="e.g. 24" min="1">
+                      </div>
+                      <div>
+                          <label style="font-size: 11px; font-weight: 800; color: var(--secondary-text); margin-bottom: 8px; display: block; text-transform: uppercase;">Expiry Time</label>
+                          <input type="datetime-local" name="expires_at" class="form-input">
+                      </div>
+                  </div>
+
+                  <div style="margin-bottom: 25px;">
+                      <label style="font-size: 11px; font-weight: 800; color: var(--secondary-text); margin-bottom: 8px; display: block; text-transform: uppercase;">Notice Content</label>
+                      <textarea name="message" class="form-input" style="height: 120px; padding: 15px; resize: none;" placeholder="Write the notice content here..." required></textarea>
+                  </div>
+
+                  <button type="submit" class="btn-primary" style="width: 100%; padding: 16px; font-size: 15px;">Post Notice</button>
+             </form>
+        </div>
+    </div>
 
     
     <div id="mod-logout-confirm" class="glass-modal" onclick="closeM(event, 'mod-logout-confirm')">
@@ -919,7 +1037,15 @@
             setTimeout(() => t.classList.remove('active'), 3000);
         }
 
-        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function openModal(id) { 
+            document.getElementById(id).style.display = 'flex'; 
+            if (id === 'mod-notice') {
+                // Set default start time to now in local format YYYY-MM-DDTHH:MM
+                const now = new Date();
+                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                document.getElementById('n-start-time').value = now.toISOString().slice(0, 16);
+            }
+        }
         function closeM(e, id) { if(e.target.id === id) document.getElementById(id).style.display = 'none'; }
 
         // Logic
@@ -1403,16 +1529,75 @@
 
 
         async function loadNot() {
-            const r = await fetch('/api/admin/notices', { headers: { 'Authorization': `Bearer ${tok}` } });
-            const d = await r.json();
-            const box = document.getElementById('notice-stack');
-            box.innerHTML = '';
-            d.forEach(x => {
-                box.innerHTML += `<div class="content-box" style="padding:25px;">
-                    <h4 style="font-weight:700; color:var(--primary-text);">${x.title}</h4>
-                    <div style="color:var(--secondary-text); font-size:13px; margin-top:10px; line-height:1.5;">${x.message}</div>
-                </div>`;
-            });
+            try {
+                const r = await fetch('/api/admin/notices', { headers: { 'Authorization': `Bearer ${tok}` } });
+                const d = await r.json();
+                const box = document.getElementById('notice-stack');
+                box.innerHTML = '';
+                
+                if (d.length === 0) {
+                    box.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--secondary-text);">No notices broadcasted yet.</div>';
+                    return;
+                }
+
+                d.forEach(x => {
+                    const now = new Date();
+                    const start = new Date(x.start_time);
+                    const expires = x.expires_at ? new Date(x.expires_at) : null;
+                    
+                    let statusHtml = '';
+                    if (expires && now > expires) {
+                        statusHtml = '<span class="badge" style="background:var(--danger); color:var(--danger-text);">🔴 EXPIRED</span>';
+                    } else if (now < start) {
+                        statusHtml = '<span class="badge" style="background:var(--info); color:var(--info-text);">🟡 UPCOMING</span>';
+                    } else {
+                        statusHtml = '<span class="badge" style="background:var(--success); color:var(--success-text);">🟢 ACTIVE</span>';
+                    }
+
+                    const roles = x.target_roles.split(',').map(r => 
+                        `<span class="badge" style="background:var(--accent-soft); color:var(--accent); margin-right:5px; border:1px solid rgba(197,168,128,0.2);">${r.trim().toUpperCase()}</span>`
+                    ).join('');
+
+                    box.innerHTML += `
+                        <div class="soft-card notice-card" style="padding:30px; border-left: 4px solid var(--accent);">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px;">
+                                <div>
+                                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+                                        ${statusHtml}
+                                        <div style="font-size:11px; color:var(--secondary-text); font-weight:600;">Posted ${new Date(x.created_at).toLocaleString()}</div>
+                                    </div>
+                                    <h4 style="font-size:18px; font-weight:800; color:var(--primary-text);">${x.title}</h4>
+                                </div>
+                                <i data-lucide="trash-2" class="action-icon i-del" style="width:18px;" onclick="deleteNotice(${x.id})"></i>
+                            </div>
+                            <p style="color:var(--secondary-text); font-size:14px; line-height:1.6; margin-bottom:20px;">${x.content}</p>
+                            <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(0,0,0,0.05); padding-top:15px;">
+                                <div>${roles}</div>
+                                <div style="font-size:11px; color:var(--secondary-text); text-align:right;">
+                                    <div><strong>Start:</strong> ${new Date(x.start_time).toLocaleString()}</div>
+                                    <div><strong>End:</strong> ${x.expires_at ? new Date(x.expires_at).toLocaleString() : 'Never Expiry'}</div>
+                                </div>
+                            </div>
+                        </div>`;
+                });
+                lucide.createIcons();
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function deleteNotice(id) {
+            if(!confirm('Delete this broadcast permanently?')) return;
+            try {
+                const res = await fetch(`/api/admin/notices/${id}`, { 
+                    method: 'DELETE', 
+                    headers: { 'Authorization': `Bearer ${tok}` } 
+                });
+                if(res.ok) { 
+                    tBox('Broadcast Removed 🗑'); 
+                    refreshData('notices'); 
+                }
+            } catch (err) { console.error(err); }
         }
 
         async function loadIss() {
@@ -1447,20 +1632,63 @@
         document.getElementById('n-form').onsubmit = async (e) => {
             e.preventDefault();
             const form = e.target;
-            const res = await fetch('/api/admin/notices', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tok}` },
-                body: JSON.stringify(Object.fromEntries(new FormData(form)))
-            });
-            if(res.ok) {
-                tBox('📢 Notice Published');
-                document.getElementById('mod-notice').style.display='none';
-                refreshData('notices');
-                form.reset();
-            } else {
-                tBox('Error publishing notice');
+            const btn = form.querySelector('button[type="submit"]');
+            
+            // Get selected roles
+            const selectedRoles = Array.from(document.querySelectorAll('.role-pill.selected')).map(p => p.dataset.role);
+            if (selectedRoles.length === 0) {
+                tBox('⚠️ Please select at least one target audience');
+                return;
+            }
+
+            const rawData = Object.fromEntries(new FormData(form));
+            const data = {
+                ...rawData,
+                audience: selectedRoles
+            };
+
+            btn.disabled = true;
+            btn.textContent = 'Transmitting... ⚡';
+
+            try {
+                const res = await fetch('/api/admin/notices', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tok}` },
+                    body: JSON.stringify(data)
+                });
+                if(res.ok) {
+                    tBox('📢 Notice Published & Synchronized');
+                    document.getElementById('mod-notice').style.display='none';
+                    refreshData('notices');
+                    form.reset();
+                    document.querySelectorAll('.role-pill').forEach(p => p.classList.remove('selected'));
+                    document.querySelector('.role-pill[data-role="Everyone"]').classList.add('selected');
+                } else {
+                    tBox('Error publishing notice');
+                }
+            } catch (err) {
+                tBox('Connection Error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Post Notice';
             }
         };
+
+        function toggleRoleSelection(pill) {
+            const role = pill.dataset.role;
+            if (role === 'Everyone') {
+                document.querySelectorAll('.role-pill').forEach(p => p.classList.remove('selected'));
+                pill.classList.add('selected');
+            } else {
+                document.querySelector('.role-pill[data-role="Everyone"]').classList.remove('selected');
+                pill.classList.toggle('selected');
+                
+                // If nothing selected, default to everyone
+                if (document.querySelectorAll('.role-pill.selected').length === 0) {
+                    document.querySelector('.role-pill[data-role="Everyone"]').classList.add('selected');
+                }
+            }
+        }
 
         // Blueprint Hub Logic
         async function loadBlup() {
@@ -1547,23 +1775,21 @@
         // Notice Bar Logic
         async function updateNoticeBar() {
             try {
-                const res = await fetch('/api/admin/notices', { headers: { 'Authorization': `Bearer ${tok}` } });
+                const res = await fetch(`/api/admin/notices?activeOnly=true&role=admin`, { 
+                    headers: { 'Authorization': `Bearer ${tok}` } 
+                });
                 const notices = await res.json();
-                const wrapper = document.getElementById('live-notice-wrapper');
-                const ticker = document.getElementById('live-notice-ticker');
                 
-                // Filter active notices (simple check if expires_at is in future or null)
-                const active = notices.filter(n => !n.expires_at || new Date(n.expires_at) > new Date());
+                const banner = document.getElementById('live-notice-banner');
+                const marquee = document.getElementById('live-marquee-content');
                 
-                if (active.length > 0) {
-                    wrapper.style.display = 'block';
-                    ticker.innerHTML = active.map(n => `&nbsp;&bull;&nbsp; ${n.title}: ${n.message}`).join(' &nbsp;&nbsp;&nbsp;&nbsp; ');
+                if (notices.length > 0) {
+                    banner.style.display = 'flex';
+                    marquee.innerHTML = notices.map(n => `📢 ${n.title} - ${n.content}`).join("   •   ");
                 } else {
-                    wrapper.style.display = 'none';
+                    banner.style.display = 'none';
                 }
-            } catch (e) {
-                console.error('Notice bar update failed');
-            }
+            } catch (e) { console.error('Notice bar error', e); }
         }
 
         // === INITIALIZATION ===

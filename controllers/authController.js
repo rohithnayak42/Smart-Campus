@@ -30,11 +30,12 @@ const login = async (req, res) => {
             
             await db.query('UPDATE users SET otp = $1, otp_expiry = $2 WHERE id = $3', [otp, otpExpiry, user.id]);
 
-            await sendEmail(
+            // Non-blocking email sending
+            sendEmail(
                 user.email,
                 'Smart Campus - Admin Login OTP',
                 `Your Admin login OTP is: ${otp}. It is valid for 5 minutes.`
-            );
+            ).catch(err => console.error('Background Email Error:', err));
 
             return res.json({ message: 'OTP sent to your email', step: 'OTP' });
         }

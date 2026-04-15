@@ -87,16 +87,20 @@ const markAttendance = async (req, res) => {
 // Common Notices
 const getMyNotices = async (req, res) => {
     try {
+        const userRole = req.user.role.toLowerCase();
+        
+        // Map message AS content and target_roles AS audience
         const { rows } = await db.query(
-            `SELECT * FROM campus_notices 
-             WHERE target_roles = 'Everyone' OR target_roles ILIKE $1 
+            `SELECT id, title, message AS content, target_roles AS audience, start_time, expires_at, created_at FROM campus_notices 
+             WHERE (target_roles ILIKE 'everyone' OR target_roles ILIKE $1)
+             AND (start_time <= NOW() AND (expires_at IS NULL OR expires_at > NOW()))
              ORDER BY created_at DESC`,
-            [`%${req.user.role}%`]
+            [`%${userRole}%`]
         );
         res.json(rows);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Server error' });
+        console.error('Error fetching stakeholder notices:', error);
+        res.status(500).json({ error: 'Server error fetching notices' });
     }
 };
 

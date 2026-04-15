@@ -412,42 +412,63 @@ const updateSchedule = async (req, res) => {
 // Notices
 const addNotice = async (req, res) => {
     try {
-        const { title, message, target_roles, targetRoles, duration_hours } = req.body;
-        const effectiveRoles = target_roles || targetRoles || 'Everyone';
-
+        const { title, message, audience, start_time, expires_at, duration_hours } = req.body;
+        
+        // 1. Validate required fields
         if (!title || !message) {
-            return res.status(400).json({ message: 'Title and message are required.' });
+            return res.status(400).json({ message: 'Notice Title and Message are required.' });
         }
 
-        // Compute expires_at if duration_hours is provided
-        let expiresAt = null;
-        if (duration_hours && parseInt(duration_hours, 10) > 0) {
-            const hours = parseInt(duration_hours, 10);
-            const date = new Date();
-            date.setHours(date.getHours() + hours);
-            expiresAt = date.toISOString();
+        // 2. Audience Handling (robust normalization)
+        let target_roles = 'Everyone';
+        if (Array.isArray(audience) && audience.length > 0) {
+            if (audience.includes('Everyone')) {
+                target_roles = 'Everyone';
+            } else {
+                target_roles = audience.join(',');
+            }
+        } else if (typeof audience === 'string' && audience.trim() !== '') {
+            target_roles = audience;
+        }
+
+        // 3. Time Logic
+        let finalStartTime = start_time ? new Date(start_time) : new Date();
+        let finalExpiresAt = expires_at ? new Date(expires_at) : null;
+
+        // If duration is provided but no expiry, calculate it
+        if (!finalExpiresAt && duration_hours && !isNaN(duration_hours)) {
+            finalExpiresAt = new Date(finalStartTime.getTime() + (duration_hours * 60 * 60 * 1000));
         }
 
         const { rows } = await db.query(
-            'INSERT INTO campus_notices (title, message, target_roles, expires_at) VALUES ($1, $2, $3, $4) RETURNING *',
-            [title.trim(), message.trim(), effectiveRoles, expiresAt]
+            'INSERT INTO campus_notices (title, message, target_roles, start_time, expires_at) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+            [title.trim(), message.trim(), target_roles, finalStartTime, finalExpiresAt]
         );
-        res.status(201).json({ message: 'Notice published successfully', notice: rows[0] });
+
+        console.log(`[Notice] Published: "${title}" for ${target_roles}`);
+        res.status(201).json({ 
+            message: 'Notice published successfully', 
+            notice: rows[0] 
+        });
     } catch (error) {
         console.error('Error adding notice:', error);
-        res.status(500).json({ message: 'Server error while publishing notice' });
+        res.status(500).json({ message: 'Server error while publishing notice: ' + error.message });
     }
 };
 
 const getNotices = async (req, res) => {
     try {
-        // If the path was /notices/live, we only return non-expired ones
-        const isLiveRequest = req.path.includes('/live');
-        let query = 'SELECT * FROM campus_notices';
+        const { role, activeOnly } = req.query;
+        // Map message AS content and target_roles AS audience for frontend compatibility
+        let query = 'SELECT id, title, message AS content, target_roles AS audience, start_time, expires_at, created_at FROM campus_notices';
         let params = [];
 
-        if (isLiveRequest) {
-            query += ' WHERE expires_at IS NULL OR expires_at > NOW()';
+        if (activeOnly === 'true') {
+            query += ' WHERE (start_time <= NOW() AND (expires_at IS NULL OR expires_at > NOW()))';
+            if (role && role !== 'admin') {
+                query += ' AND (target_roles ILIKE \'everyone\' OR target_roles ILIKE $1)';
+                params.push(`%${role}%`);
+            }
         }
 
         query += ' ORDER BY created_at DESC';
@@ -456,7 +477,7 @@ const getNotices = async (req, res) => {
         res.json(rows);
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Server error fetching notices' });
     }
 };
 
