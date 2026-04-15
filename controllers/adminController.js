@@ -494,8 +494,10 @@ const getNotices = async (req, res) => {
 
         if (activeOnly === 'true') {
             query += ' WHERE (start_time <= NOW() AND (expires_at IS NULL OR expires_at > NOW()))';
-            if (role && role !== 'admin') {
-                query += ' AND (target_roles ILIKE \'everyone\' OR target_roles ILIKE $1)';
+            if (role === 'admin') {
+                query += ` AND (target_roles ILIKE '%everyone%' OR target_roles ILIKE '%admin%')`;
+            } else if (role) {
+                query += ' AND (target_roles ILIKE \'%everyone%\' OR target_roles ILIKE $1)';
                 params.push(`%${role}%`);
             }
         }
