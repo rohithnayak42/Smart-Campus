@@ -190,6 +190,28 @@ const createUserTable = async () => {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
 
+            CREATE TABLE IF NOT EXISTS worker_tasks (
+                id SERIAL PRIMARY KEY,
+                title VARCHAR(200) NOT NULL,
+                description TEXT NOT NULL,
+                location VARCHAR(100) NOT NULL,
+                assigned_to INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                status VARCHAR(20) DEFAULT 'Pending',
+                priority VARCHAR(20) DEFAULT 'Normal',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS guard_duties (
+                id SERIAL PRIMARY KEY,
+                title VARCHAR(200) NOT NULL,
+                location VARCHAR(100) NOT NULL,
+                time_slot VARCHAR(100) NOT NULL,
+                assigned_to INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                status VARCHAR(20) DEFAULT 'Pending',
+                priority VARCHAR(20) DEFAULT 'Normal',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
             CREATE TABLE IF NOT EXISTS system_activities (
                 id SERIAL PRIMARY KEY,
                 message TEXT NOT NULL,

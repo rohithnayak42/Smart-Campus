@@ -635,10 +635,89 @@ const checkEmail = async (req, res) => {
     }
 };
 
+const getWorkerTasks = async (req, res) => {
+    try {
+        const { rows } = await db.query(`
+            SELECT t.*, u.name as assignee_name 
+            FROM worker_tasks t 
+            LEFT JOIN users u ON t.assigned_to = u.id 
+            ORDER BY t.created_at DESC
+        `);
+        res.json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error fetching worker tasks' });
+    }
+};
+
+const assignWorkerTask = async (req, res) => {
+    try {
+        const { title, description, location, assignedTo, priority } = req.body;
+        if (!title || !assignedTo || !location) return res.status(400).json({ message: 'Missing required fields' });
+        
+        await db.query(
+            'INSERT INTO worker_tasks (title, description, location, assigned_to, priority) VALUES ($1, $2, $3, $4, $5)',
+            [title, description, location, assignedTo, priority || 'Medium']
+        );
+        
+        // Bonus: live notice
+        await db.query(
+            'INSERT INTO campus_notices (title, message, target_roles, expires_at) VALUES ($1, $2, $3, $4)',
+            ['Task Assignment', `New task assigned: ${title} - ${location}`, 'workers', new Date(Date.now() + 2 * 3600000)]
+        );
+        
+        logActivity(`Assigned worker task: ${title} to User ID ${assignedTo}`, 'task');
+        res.status(201).json({ message: 'Worker task assigned successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error assigning worker task' });
+    }
+};
+
+const getGuardDuties = async (req, res) => {
+    try {
+        const { rows } = await db.query(`
+            SELECT d.*, u.name as assignee_name 
+            FROM guard_duties d 
+            LEFT JOIN users u ON d.assigned_to = u.id 
+            ORDER BY d.created_at DESC
+        `);
+        res.json(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error fetching guard duties' });
+    }
+};
+
+const assignGuardDuty = async (req, res) => {
+    try {
+        const { title, location, timeSlot, assignedTo, priority } = req.body;
+        if (!title || !location || !timeSlot || !assignedTo) return res.status(400).json({ message: 'Missing required fields' });
+        
+        await db.query(
+            'INSERT INTO guard_duties (title, location, time_slot, assigned_to, priority) VALUES ($1, $2, $3, $4, $5)',
+            [title, location, timeSlot, assignedTo, priority || 'Medium']
+        );
+        
+        // Bonus: live notice
+        await db.query(
+            'INSERT INTO campus_notices (title, message, target_roles, expires_at) VALUES ($1, $2, $3, $4)',
+            ['Duty Assignment', `New duty assigned: ${title} - ${location}`, 'guards', new Date(Date.now() + 2 * 3600000)]
+        );
+
+        logActivity(`Assigned guard duty: ${title} to User ID ${assignedTo}`, 'duty');
+        res.status(201).json({ message: 'Guard duty assigned successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Server error assigning guard duty' });
+    }
+};
+
 module.exports = { 
     addUser, getUsers, deleteUser, updateUser, getStats, getIssues, updateIssueStatus, 
     addSubject, getSubjects, updateSubject, deleteSubject, addSchedule, getSchedules, updateSchedule, deleteSchedule,
     addNotice, getNotices, deleteNotice, resetPassword,
     uploadBlueprint, getBlueprints, deleteBlueprint,
-    getActivities, addActivity, checkEmail
+    getActivities, addActivity, checkEmail,
+    getWorkerTasks, assignWorkerTask, getGuardDuties, assignGuardDuty
 };

@@ -65,6 +65,12 @@ router.delete('/blueprints/:id', adminMiddleware, deleteBlueprint);
 router.get('/activities', adminMiddleware, require('../controllers/adminController').getActivities);
 router.post('/activities', adminMiddleware, require('../controllers/adminController').addActivity);
 
+// Tasks & Duties (Worker & Guard)
+router.get('/tasks/worker', adminMiddleware, require('../controllers/adminController').getWorkerTasks);
+router.post('/tasks/worker', adminMiddleware, require('../controllers/adminController').assignWorkerTask);
+router.get('/duties/guard', adminMiddleware, require('../controllers/adminController').getGuardDuties);
+router.post('/duties/guard', adminMiddleware, require('../controllers/adminController').assignGuardDuty);
+
 module.exports = router;
 
 

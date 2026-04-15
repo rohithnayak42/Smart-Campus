@@ -580,6 +580,16 @@
                     <i data-lucide="alert-triangle"></i><span>Resolution Hub</span>
                 </a>
             </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" id="nav-tasks" onclick="switchTab('tasks'); return false;">
+                    <i data-lucide="hard-hat"></i><span>Task Allocation</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" id="nav-duties" onclick="switchTab('duties'); return false;">
+                    <i data-lucide="shield"></i><span>Guard Assignments</span>
+                </a>
+            </li>
         </ul>
     </nav>
 
@@ -816,7 +826,85 @@
             </div>
             <div id="issue-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 24px;"></div>
         </div>
+        <!-- TASK ALLOCATION VIEW -->
+        <div id="tasks" class="tab-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
+                <div>
+                    <h2 style="font-size: 26px; font-weight: 800; color: var(--primary-text);">Worker Tasks</h2>
+                    <p style="color: var(--secondary-text); font-size: 14px;">Assign and track campus operations.</p>
+                </div>
+                <button class="btn-primary" onclick="openModal('mod-add-task'); loadWorkersDropdown();">
+                    <i data-lucide="plus"></i> Assign Task
+                </button>
+            </div>
+            
+            <div class="premium-table-wrap">
+                <table class="linear-table" id="tasks-table">
+                    <thead><tr><th style="padding-left:30px">Task Title</th><th>Location</th><th>Assigned To</th><th>Priority</th><th>Status</th><th>Date</th></tr></thead>
+                    <tbody id="tasks-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- GUARD ASSIGNMENTS VIEW -->
+        <div id="duties" class="tab-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
+                <div>
+                    <h2 style="font-size: 26px; font-weight: 800; color: var(--primary-text);">Security Duties</h2>
+                    <p style="color: var(--secondary-text); font-size: 14px;">Assign time slots and patrol zones to guards.</p>
+                </div>
+                <button class="btn-primary" onclick="openModal('mod-add-duty'); loadGuardsDropdown();">
+                    <i data-lucide="plus"></i> Assign Duty
+                </button>
+            </div>
+            
+            <div class="premium-table-wrap">
+                <table class="linear-table" id="duties-table">
+                    <thead><tr><th style="padding-left:30px">Duty Title</th><th>Location</th><th>Time Slot</th><th>Assigned To</th><th>Status</th><th>Date</th></tr></thead>
+                    <tbody id="duties-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
     </main>
+
+    <!-- TASK MODAL -->
+    <div class="glass-modal" id="mod-add-task" onclick="closeM(event, 'mod-add-task')">
+        <div class="modal-body">
+            <h2 style="margin-bottom:15px;">Assign Task to Worker</h2>
+            <form id="task-form" style="display:grid; gap:15px;">
+                <input type="text" name="title" class="form-input" placeholder="Task Title (e.g. Fix Light)" required>
+                <textarea name="description" class="form-input" placeholder="Description" rows="3" required></textarea>
+                <input type="text" name="location" class="form-input" placeholder="Location (e.g. Room 101)" required>
+                <select name="assignedTo" id="task-worker-select" class="form-input" required></select>
+                <select name="priority" class="form-input" required>
+                    <option value="Low">Low Priority</option>
+                    <option value="Medium" selected>Medium Priority</option>
+                    <option value="High">High Priority</option>
+                </select>
+                <button type="submit" class="btn-primary" style="margin-top:10px;">Assign Task</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- DUTY MODAL -->
+    <div class="glass-modal" id="mod-add-duty" onclick="closeM(event, 'mod-add-duty')">
+        <div class="modal-body">
+            <h2 style="margin-bottom:15px;">Assign Duty to Guard</h2>
+            <form id="duty-form" style="display:grid; gap:15px;">
+                <input type="text" name="title" class="form-input" placeholder="Duty Title (e.g. Gate Monitoring)" required>
+                <input type="text" name="location" class="form-input" placeholder="Location (e.g. Main Gate)" required>
+                <input type="text" name="timeSlot" class="form-input" placeholder="Time Slot (e.g. 9AM - 1PM)" required>
+                <select name="assignedTo" id="duty-guard-select" class="form-input" required></select>
+                <select name="priority" class="form-input" required>
+                    <option value="Low">Low Priority</option>
+                    <option value="Medium" selected>Medium Priority</option>
+                    <option value="High">High Priority</option>
+                </select>
+                <button type="submit" class="btn-primary" style="margin-top:10px;">Assign Duty</button>
+            </form>
+        </div>
+    </div>
 
     <!-- Modals -->
     <div id="mod-user" class="glass-modal" onclick="closeM(event, 'mod-user')">
@@ -1053,12 +1141,15 @@
             else if (id === 'notices') loadNot();
             else if (id === 'blueprint') loadBlup();
             else if (id === 'issues') loadIss();
+            else if (id === 'tasks') loadTasksD();
+            else if (id === 'duties') loadDutiesD();
         }
 
         function navigate(path) {
             var tabMap = {
                 '/admin-dashboard': 'overview', '/users': 'users', '/subjects': 'subjects',
-                '/timetable': 'timetable', '/notices': 'notices', '/blueprint': 'blueprint', '/issues': 'issues'
+                '/timetable': 'timetable', '/notices': 'notices', '/blueprint': 'blueprint', '/issues': 'issues',
+                '/tasks': 'tasks', '/duties': 'duties'
             };
             switchTab(tabMap[path] || 'overview');
         }
@@ -1072,6 +1163,8 @@
             else if (tabId === 'notices') loadNot();
             else if (tabId === 'blueprint') loadBlup();
             else if (tabId === 'issues') loadIss();
+            else if (tabId === 'tasks') loadTasksD();
+            else if (tabId === 'duties') loadDutiesD();
         }
 
         function tBox(msg) {
@@ -2024,6 +2117,88 @@
                 }
             } catch (e) { console.error('Notice bar error', e); }
         }
+
+        async function loadTasksD() {
+            try {
+                const res = await fetch('/api/admin/tasks/worker', { headers: { 'Authorization': `Bearer ${tok}` } });
+                const tasks = await res.json();
+                const tb = document.getElementById('tasks-tbody');
+                tb.innerHTML = tasks.length === 0 ? '<tr><td colspan="6" style="text-align:center">No tasks assigned yet.</td></tr>' : tasks.map(t => `
+                    <tr>
+                        <td style="padding-left:30px"><strong>${t.title}</strong></td>
+                        <td>${t.location}</td>
+                        <td>${t.assignee_name || 'N/A'}</td>
+                        <td><span style="font-size:11px; font-weight:700; padding:4px 8px; border-radius:10px; background:${t.priority==='High'?'#FEE2E2':'#FEF3C7'}; color:${t.priority==='High'?'#991B1B':'#92400E'}">${t.priority}</span></td>
+                        <td><span style="font-size:11px; font-weight:700; padding:4px 8px; border-radius:10px; background:${t.status==='Completed'?'#DCFCE7':'#FEF3C7'}; color:${t.status==='Completed'?'#166534':'#92400E'}">${t.status}</span></td>
+                        <td>${new Date(t.created_at).toLocaleDateString()}</td>
+                    </tr>
+                `).join('');
+            } catch (err) { console.error('Error loading worker tasks:', err); }
+        }
+
+        async function loadDutiesD() {
+            try {
+                const res = await fetch('/api/admin/duties/guard', { headers: { 'Authorization': `Bearer ${tok}` } });
+                const duties = await res.json();
+                const tb = document.getElementById('duties-tbody');
+                tb.innerHTML = duties.length === 0 ? '<tr><td colspan="6" style="text-align:center">No duties assigned yet.</td></tr>' : duties.map(d => `
+                    <tr>
+                        <td style="padding-left:30px"><strong>${d.title}</strong></td>
+                        <td>${d.location}</td>
+                        <td>${d.time_slot}</td>
+                        <td>${d.assignee_name || 'N/A'}</td>
+                        <td><span style="font-size:11px; font-weight:700; padding:4px 8px; border-radius:10px; background:${d.status==='Completed'?'#DCFCE7':'#FEF3C7'}; color:${d.status==='Completed'?'#166534':'#92400E'}">${d.status}</span></td>
+                        <td>${new Date(d.created_at).toLocaleDateString()}</td>
+                    </tr>
+                `).join('');
+            } catch (err) { console.error('Error loading guard duties:', err); }
+        }
+
+        async function loadWorkersDropdown() {
+            try {
+                const res = await fetch('/api/admin/users', { headers: { 'Authorization': `Bearer ${tok}` } });
+                const users = await res.json();
+                const sel = document.getElementById('task-worker-select');
+                sel.innerHTML = '<option value="">Select Worker...</option>' + 
+                    users.filter(u => u.role === 'workers').map(u => `<option value="${u.id}">${u.name}</option>`).join('');
+            } catch(e) {}
+        }
+
+        async function loadGuardsDropdown() {
+            try {
+                const res = await fetch('/api/admin/users', { headers: { 'Authorization': `Bearer ${tok}` } });
+                const users = await res.json();
+                const sel = document.getElementById('duty-guard-select');
+                sel.innerHTML = '<option value="">Select Guard...</option>' + 
+                    users.filter(u => u.role === 'guards').map(u => `<option value="${u.id}">${u.name}</option>`).join('');
+            } catch(e) {}
+        }
+
+        document.getElementById('task-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const data = Object.fromEntries(new FormData(e.target));
+            try {
+                const res = await fetch('/api/admin/tasks/worker', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tok}` },
+                    body: JSON.stringify(data)
+                });
+                if(res.ok) { tBox('Task assigned to Worker'); document.getElementById('mod-add-task').style.display='none'; e.target.reset(); loadTasksD(); }
+            } catch(e) {}
+        };
+
+        document.getElementById('duty-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const data = Object.fromEntries(new FormData(e.target));
+            try {
+                const res = await fetch('/api/admin/duties/guard', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tok}` },
+                    body: JSON.stringify(data)
+                });
+                if(res.ok) { tBox('Duty assigned to Guard'); document.getElementById('mod-add-duty').style.display='none'; e.target.reset(); loadDutiesD(); }
+            } catch(e) {}
+        };
 
         // === INITIALIZATION ===
         (function init() {

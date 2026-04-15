@@ -601,7 +601,10 @@
                     return `
                     <tr>
                         <td style="font-weight:600; color:var(--primary-text);">${x.title}</td>
-                        <td style="color:var(--secondary-text);">${x.description}</td>
+                        <td style="color:var(--secondary-text);">
+                            ${x.location ? `<strong>${x.location}</strong><br>` : ''}
+                            ${x.time_slot || x.description || ''}
+                        </td>
                         <td><span class="${st}">${x.status === 'In Progress' ? 'Active' : x.status}</span></td>
                         <td style="text-align:right;">
                             ${x.status === 'Pending' ? `<button class="btn-verify" onclick="changeTaskStatus(${x.id}, 'In Progress')">Start Shift / Active</button>` : ''}

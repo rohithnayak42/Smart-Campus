@@ -208,10 +208,20 @@ const replyToDoubt = async (req, res) => {
 // Tasks & Duties (Guard/Worker)
 const getMyTasks = async (req, res) => {
     try {
-        const { rows } = await db.query(
-            'SELECT * FROM stakeholder_tasks WHERE assignee_id = $1 ORDER BY created_at DESC',
-            [req.user.id]
-        );
+        const userRes = await db.query('SELECT role FROM users WHERE id = $1', [req.user.id]);
+        const role = userRes.rows[0].role;
+        let rows = [];
+        
+        if (role === 'workers') {
+            const result = await db.query('SELECT * FROM worker_tasks WHERE assigned_to = $1 ORDER BY created_at DESC', [req.user.id]);
+            rows = result.rows;
+        } else if (role === 'guards') {
+            const result = await db.query('SELECT * FROM guard_duties WHERE assigned_to = $1 ORDER BY created_at DESC', [req.user.id]);
+            rows = result.rows;
+        } else {
+            const result = await db.query('SELECT * FROM stakeholder_tasks WHERE assignee_id = $1 ORDER BY created_at DESC', [req.user.id]);
+            rows = result.rows;
+        }
         res.json(rows);
     } catch (error) {
         console.error(error);
@@ -223,10 +233,20 @@ const updateTaskStatus = async (req, res) => {
     try {
         const { id } = req.params;
         const { status } = req.body;
-        const { rows } = await db.query(
-            'UPDATE stakeholder_tasks SET status = $1 WHERE id = $2 AND assignee_id = $3 RETURNING *',
-            [status, id, req.user.id]
-        );
+        const userRes = await db.query('SELECT role FROM users WHERE id = $1', [req.user.id]);
+        const role = userRes.rows[0].role;
+        let rows = [];
+        
+        if (role === 'workers') {
+            const result = await db.query('UPDATE worker_tasks SET status = $1 WHERE id = $2 AND assigned_to = $3 RETURNING *', [status, id, req.user.id]);
+            rows = result.rows;
+        } else if (role === 'guards') {
+            const result = await db.query('UPDATE guard_duties SET status = $1 WHERE id = $2 AND assigned_to = $3 RETURNING *', [status, id, req.user.id]);
+            rows = result.rows;
+        } else {
+            const result = await db.query('UPDATE stakeholder_tasks SET status = $1 WHERE id = $2 AND assignee_id = $3 RETURNING *', [status, id, req.user.id]);
+            rows = result.rows;
+        }
         res.json(rows[0]);
     } catch (error) {
         console.error(error);
