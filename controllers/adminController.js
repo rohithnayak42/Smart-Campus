@@ -72,7 +72,17 @@ const addUser = async (req, res) => {
             </div>
         `;
 
-        // Send response IMMEDIATELY (don't wait for email)
+        // Await HTML email to real_email (personal address)
+        try {
+            await sendEmail(effectiveRealEmail, emailSubject, emailBody, emailHtml);
+            console.log(`✅ Credentials email sent to ${effectiveRealEmail}`);
+        } catch (err) {
+            console.error(`❌ Failed to send email to ${effectiveRealEmail}:`, err.message);
+        }
+            
+        await logActivity(`New user added: ${name} (${role})`, 'user');
+
+        // Send response after background operations finish for serverless safety
         res.status(201).json({ 
             message: 'User created and credentials sent to personal email', 
             user: { 
@@ -83,13 +93,6 @@ const addUser = async (req, res) => {
                 role: user.role 
             } 
         });
-
-        // Send HTML email to real_email (personal address) IN BACKGROUND
-        sendEmail(effectiveRealEmail, emailSubject, emailBody, emailHtml)
-            .then(() => console.log(`✅ Credentials email sent to ${effectiveRealEmail}`))
-            .catch(err => console.error(`❌ Failed to send email to ${effectiveRealEmail}:`, err.message));
-            
-        logActivity(`New user added: ${name} (${role})`, 'user');
     } catch (error) {
         console.error('Error adding user:', error);
         res.status(500).json({ error: 'Server error during user creation' });

@@ -516,10 +516,39 @@
         function goBackToLogin() { showView('login'); }
         function showForgotPassword() { showView('forgot'); }
 
-        function resendOTP() {
-            // Logic to trigger backend resend would go here
-            console.log("Resending OTP...");
-            startResendTimer();
+        async function resendOTP() {
+            const email = document.getElementById('email').value;
+            const role = document.getElementById('selected-role').value;
+            const btn = document.querySelector(".resend-btn");
+            const errBox = document.getElementById('otp-error');
+            
+            btn.disabled = true;
+            btn.textContent = "Sending...";
+            errBox.style.display = 'none';
+
+            try {
+                const res = await fetch('/api/auth/resend-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, role })
+                });
+                const data = await res.json();
+                
+                if (!res.ok) {
+                    errBox.textContent = data.message || "Failed to resend OTP.";
+                    errBox.style.display = 'block';
+                    btn.disabled = false;
+                    btn.textContent = "Resend";
+                } else {
+                    // Success! Start cooldown timer
+                    startResendTimer();
+                }
+            } catch (err) {
+                errBox.textContent = 'Network error while attempting to resend OTP.';
+                errBox.style.display = 'block';
+                btn.disabled = false;
+                btn.textContent = "Resend";
+            }
         }
 
         function startResendTimer() {
