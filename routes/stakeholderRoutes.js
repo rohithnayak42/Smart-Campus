@@ -21,6 +21,7 @@ const {
     getStudentsByBatch,
     markStudentAttendance,
     conductTest,
+    getTests,
     getMyAttendance,
     getSharedBlueprints,
     updateMyStatus
@@ -31,7 +32,14 @@ const path = require('path');
 const fs = require('fs');
 
 const uploadsDir = path.join(__dirname, '..', 'uploads', 'materials');
-try { if (!fs.existsSync(uploadsDir)) { fs.mkdirSync(uploadsDir, { recursive: true }); } } catch (e) { console.warn("Uploads folder creation skipped (Vercel)"); }
+try { 
+    if (!fs.existsSync(uploadsDir)) { 
+        fs.mkdirSync(uploadsDir, { recursive: true }); 
+        console.log(`--- SYSTEM: Created missing directory: ${uploadsDir}`);
+    } 
+} catch (e) { 
+    console.error(`--- SYSTEM ERROR: Could not create materials upload directory: ${e.message}`);
+}
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, uploadsDir),
@@ -79,5 +87,6 @@ router.get('/issues', getMyIssues);
 router.post('/materials', upload.single('file'), uploadMaterial);
 router.get('/materials', getMaterials);
 router.get('/blueprints', getSharedBlueprints);
+router.get('/tests', getTests);
 
 module.exports = router;

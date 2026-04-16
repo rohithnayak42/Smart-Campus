@@ -70,12 +70,13 @@ const createUserTable = async () => {
                 title VARCHAR(200) NOT NULL,
                 message TEXT NOT NULL,
                 target_roles VARCHAR(100) DEFAULT 'Everyone',
+                duration_hours INTEGER DEFAULT 0,
                 start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 expires_at TIMESTAMP,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
 
-            -- Add expires_at and start_time columns if missing on existing tables
+            -- Add expires_at, start_time, and duration_hours columns if missing on existing tables
             DO $$
             BEGIN
                 IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='campus_notices' AND column_name='expires_at') THEN
@@ -83,6 +84,9 @@ const createUserTable = async () => {
                 END IF;
                 IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='campus_notices' AND column_name='start_time') THEN
                     ALTER TABLE campus_notices ADD COLUMN start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='campus_notices' AND column_name='duration_hours') THEN
+                    ALTER TABLE campus_notices ADD COLUMN duration_hours INTEGER DEFAULT 0;
                 END IF;
             END $$;
 
@@ -190,6 +194,23 @@ const createUserTable = async () => {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
 
+            -- Ensure faculty_tests has all columns (Migration)
+            DO $$
+            BEGIN
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='faculty_tests' AND column_name='title') THEN
+                    ALTER TABLE faculty_tests ADD COLUMN title VARCHAR(200) NOT NULL DEFAULT 'Untitled Test';
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='faculty_tests' AND column_name='subject') THEN
+                    ALTER TABLE faculty_tests ADD COLUMN subject VARCHAR(100) NOT NULL DEFAULT 'General';
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='faculty_tests' AND column_name='description') THEN
+                    ALTER TABLE faculty_tests ADD COLUMN description TEXT;
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='faculty_tests' AND column_name='file_url') THEN
+                    ALTER TABLE faculty_tests ADD COLUMN file_url VARCHAR(255);
+                END IF;
+            END $$;
+
             CREATE TABLE IF NOT EXISTS worker_tasks (
                 id SERIAL PRIMARY KEY,
                 title VARCHAR(200) NOT NULL,
@@ -220,7 +241,7 @@ const createUserTable = async () => {
             );
         `);
 
-        console.log('Database schema ensured (Users, Subjects, Schedules, Notices, Issues, Blueprints).');
+        console.log('Database schema ensured (Users, Subjects, Schedules, Notices, Issues, Blueprints, Tests).');
     } catch (err) {
         console.error('Error creating database tables', err);
     }

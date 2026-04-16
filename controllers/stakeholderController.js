@@ -134,8 +134,8 @@ const postFacultyNotice = async (req, res) => {
         );
         res.status(201).json(rows[0]);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Server error' });
+        console.error('Error in postFacultyNotice:', error.message);
+        res.status(500).json({ error: 'Server error publishing notice', details: error.message });
     }
 };
 
@@ -169,23 +169,10 @@ const getStudentDoubts = async (req, res) => {
 
 const getFacultyDoubts = async (req, res) => {
     try {
-        // Faculty sees doubts for their assigned subjects
-        const facultyRes = await db.query('SELECT name FROM users WHERE id = $1', [req.user.id]);
-        const facultyName = facultyRes.rows[0]?.name;
-
-        // Get subjects assigned to this faculty
-        const subRes = await db.query('SELECT name FROM subjects WHERE assigned_faculty = $1', [facultyName]);
-        const subjects = subRes.rows.map(s => s.name);
-
-        if (subjects.length === 0) return res.json([]);
-
-        const { rows } = await db.query(
-            'SELECT * FROM student_doubts WHERE subject = ANY($1) ORDER BY created_at DESC',
-            [subjects]
-        );
+        const { rows } = await db.query('SELECT * FROM student_doubts ORDER BY created_at DESC LIMIT 50');
         res.json(rows);
     } catch (error) {
-        console.error(error);
+        console.error('Error in getFacultyDoubts:', error);
         res.status(500).json({ error: 'Server error' });
     }
 };
@@ -363,14 +350,40 @@ const conductTest = async (req, res) => {
         const { title, subject, description } = req.body;
         const fileUrl = req.file ? `/uploads/materials/${req.file.filename}` : null;
 
+        if (!title || !subject) {
+            return res.status(400).json({ message: 'Title and Subject are required' });
+        }
+
         const { rows } = await db.query(
             'INSERT INTO faculty_tests (faculty_id, title, subject, description, file_url) VALUES ($1, $2, $3, $4, $5) RETURNING *',
             [req.user.id, title, subject, description, fileUrl]
         );
         res.status(201).json(rows[0]);
     } catch (error) {
+        console.error('Error in conductTest:', error.message);
+        res.status(500).json({ error: 'Server error creating test', details: error.message });
+    }
+};
+
+const getTests = async (req, res) => {
+    try {
+        const { subject } = req.query;
+        let query = `
+            SELECT t.*, u.name as faculty_name 
+            FROM faculty_tests t 
+            LEFT JOIN users u ON t.faculty_id = u.id 
+        `;
+        const params = [];
+        if (subject) {
+            query += ' WHERE subject = $1';
+            params.push(subject);
+        }
+        query += ' ORDER BY created_at DESC';
+        const { rows } = await db.query(query, params);
+        res.json(rows);
+    } catch (error) {
         console.error(error);
-        res.status(500).json({ error: 'Server error creating test' });
+        res.status(500).json({ error: 'Server error fetching tests' });
     }
 };
 
@@ -430,6 +443,7 @@ module.exports = {
     getStudentsByBatch,
     markStudentAttendance,
     conductTest,
+    getTests,
     getMyAttendance,
     getSharedBlueprints,
     updateMyStatus
