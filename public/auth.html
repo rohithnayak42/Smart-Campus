@@ -253,7 +253,7 @@
             width: 100%;
         }
 
-        .otp-box {
+        .otp-box, .otp-box-forgot {
             width: 100%;
             height: 55px;
             text-align: center;
@@ -266,10 +266,14 @@
             background: rgba(255, 255, 255, 0.8);
         }
 
-        .otp-box:focus {
+        .otp-box:focus, .otp-box-forgot:focus {
             border-color: #C5A880;
             box-shadow: 0 0 0 3px rgba(197, 168, 128, 0.2);
             background: #fff;
+        }
+
+        .login-card form {
+            width: 100%;
         }
 
         .resend-container {
@@ -477,7 +481,7 @@
                     <input type="text" maxlength="1" class="otp-box-forgot" required />
                     <input type="text" maxlength="1" class="otp-box-forgot" required />
                 </div>
-                <button type="submit" class="login-btn" id="forgot-otp-btn-submit">
+                <button type="submit" class="login-btn" id="forgot-otp-btn-submit" style="width: 100%; margin-top: 20px;">
                     <span style="display:flex; align-items:center; justify-content:center;"><span class="btn-text">Verify & Reset</span></span>
                 </button>
             </form>
