@@ -791,12 +791,20 @@
                 const res = await fetch('/api/stakeholder/notices', { headers: { 'Authorization': `Bearer ${tok}` } });
                 const data = await res.json();
                 const box = document.getElementById('notices-list');
-                if(data.length === 0) { box.innerHTML = '<p style="color:var(--secondary-text); font-size:14px;">No active bulletins.</p>'; return; }
+                if(data.length === 0) {
+                    box.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--secondary-text);">No active faculty broadcasts.</div>'; return;
+                }
                 box.innerHTML = data.map(x => `
-                    <div class="soft-card notice-card" style="margin-bottom:0; padding:20px;">
-                        <h4 style="color:var(--primary-text); font-weight:700;">${x.title}</h4>
-                        <p style="margin-top:10px; color:var(--secondary-text); font-size:13px; line-height:1.5;">${x.content}</p>
-                        <div style="margin-top:10px; font-size:10px; color:var(--accent); font-weight:700;">ADMIN NOTICE</div>
+                    <div class="soft-card notice-card" style="margin-bottom:0; padding:25px; border-left: 4px solid var(--accent); position: relative; transition: var(--transition);">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+                            <span class="badge-present" style="background:var(--accent-soft); color:var(--accent); font-size:10px; padding:4px 10px;">📢 ADMIN ANNOUNCEMENT</span>
+                            <span style="font-size:10px; color:var(--secondary-text); font-weight:600;">${new Date(x.created_at).toLocaleDateString()}</span>
+                        </div>
+                        <h4 style="color:var(--primary-text); font-weight:800; font-size:16px; margin-bottom:10px;">${x.title}</h4>
+                        <p style="color:var(--secondary-text); font-size:13px; line-height:1.6; margin-bottom:15px;">${x.content}</p>
+                        <div style="margin-top:15px; padding-top:12px; border-top: 1px solid rgba(0,0,0,0.03); display:flex; justify-content:space-between; align-items:center;">
+                            <div style="font-size:10px; color:var(--secondary-text); font-style:italic;">Effective Until: ${x.expires_at ? new Date(x.expires_at).toLocaleString() : 'Further Notice'}</div>
+                        </div>
                     </div>
                 `).join('');
             } catch(e) {}

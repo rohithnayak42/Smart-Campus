@@ -673,7 +673,7 @@
                     <h2 class="section-title">Direct Triggers</h2>
                     <div style="display: grid; gap: 12px;">
                         <button class="btn-primary" onclick="openModal('mod-user')">Onboard New User</button>
-                        <button class="btn-secondary" onclick="switchTab('notices'); setTimeout(() => openModal('mod-notice'), 100)">Publish Announcement</button>
+                        <button class="btn-secondary" onclick="document.getElementById('n-edit-id').value=''; switchTab('notices'); setTimeout(() => openModal('mod-notice'), 100)">Publish Announcement</button>
                         <button class="btn-secondary" style="background:#F1F5F9; color:var(--primary-text);" onclick="switchTab('subjects'); setTimeout(toggleSubjectForm, 100)">Add Curriculum</button>
                     </div>
                 </div>
@@ -796,8 +796,16 @@
                     <h2>Campus Communications</h2>
                     <p>Broadcast announcements, alerts, and schedules to specific stakeholder groups with time-based visibility.</p>
                 </div>
-                <button class="btn-primary" onclick="openModal('mod-notice')">+ Transmit Notice</button>
+                <button class="btn-primary" onclick="document.getElementById('n-edit-id').value=''; openModal('mod-notice')">+ Transmit Notice</button>
             </div>
+
+            <div class="filter-system" id="notice-filters" style="margin-bottom: 25px;">
+                <button class="filter-pill active" onclick="setNoticeFilter('All', this)">All History</button>
+                <button class="filter-pill" onclick="setNoticeFilter('Active', this)">Active Notices</button>
+                <button class="filter-pill" onclick="setNoticeFilter('Upcoming', this)">Upcoming</button>
+                <button class="filter-pill" onclick="setNoticeFilter('Expired', this)">Expired</button>
+            </div>
+
 
             <div class="premium-table-wrap" style="padding: 25px; background: transparent; box-shadow: none; border: none;">
                 <div id="notice-stack" style="display: grid; gap: 20px;">
@@ -1061,6 +1069,7 @@
              <p style="color: var(--secondary-text); font-size: 13px; margin-bottom: 25px;">Broadcast announcements to targeted audience with scheduled visibility.</p>
              
              <form id="n-form">
+                  <input type="hidden" name="id" id="n-edit-id">
                   <div style="margin-bottom: 20px;">
                       <label style="font-size: 11px; font-weight: 800; color: var(--secondary-text); margin-bottom: 8px; display: block; text-transform: uppercase;">Notice Title</label>
                       <input type="text" name="title" class="form-input" placeholder="e.g. Semester Exam Schedule Announced" required>
@@ -1826,38 +1835,45 @@
         };
 
 
+        let currentNoticeFilter = 'All';
+        function setNoticeFilter(status, el) {
+            document.querySelectorAll('#notice-filters .filter-pill').forEach(p => p.classList.remove('active'));
+            el.classList.add('active');
+            currentNoticeFilter = status;
+            loadNot();
+        }
+
         async function loadNot() {
             try {
-                const r = await fetch('/api/admin/notices', { headers: { 'Authorization': `Bearer ${tok}` } });
+                const url = currentNoticeFilter === 'All' ? '/api/admin/notices' : `/api/admin/notices?status=${currentNoticeFilter}`;
+                const r = await fetch(url, { headers: { 'Authorization': `Bearer ${tok}` } });
                 const d = await r.json();
                 const box = document.getElementById('notice-stack');
                 box.innerHTML = '';
                 
                 if (d.length === 0) {
-                    box.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--secondary-text);">No notices broadcasted yet.</div>';
+                    box.innerHTML = `<div style="padding: 40px; text-align: center; color: var(--secondary-text);">No ${currentNoticeFilter !== 'All' ? currentNoticeFilter.toLowerCase() : ''} notices broadcasted yet.</div>`;
                     return;
                 }
 
                 d.forEach(x => {
-                    const now = new Date();
-                    const start = new Date(x.start_time);
-                    const expires = x.expires_at ? new Date(x.expires_at) : null;
-                    
+                    const status = x.current_status || 'ACTIVE';
                     let statusHtml = '';
-                    if (expires && now > expires) {
+                    if (status === 'EXPIRED') {
                         statusHtml = '<span class="badge" style="background:var(--danger); color:var(--danger-text);">🔴 EXPIRED</span>';
-                    } else if (now < start) {
+                    } else if (status === 'UPCOMING') {
                         statusHtml = '<span class="badge" style="background:var(--info); color:var(--info-text);">🟡 UPCOMING</span>';
                     } else {
                         statusHtml = '<span class="badge" style="background:var(--success); color:var(--success-text);">🟢 ACTIVE</span>';
                     }
 
-                    const roles = x.target_roles.split(',').map(r => 
+                    const audienceArray = x.audience ? x.audience.split(',') : ['Everyone'];
+                    const roles = audienceArray.map(r => 
                         `<span class="badge" style="background:var(--accent-soft); color:var(--accent); margin-right:5px; border:1px solid rgba(197,168,128,0.2);">${r.trim().toUpperCase()}</span>`
                     ).join('');
 
                     box.innerHTML += `
-                        <div class="soft-card notice-card" style="padding:30px; border-left: 4px solid var(--accent);">
+                        <div class="soft-card notice-card" style="padding:30px; border-left: 4px solid var(--accent); position: relative;">
                             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px;">
                                 <div>
                                     <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
@@ -1866,7 +1882,10 @@
                                     </div>
                                     <h4 style="font-size:18px; font-weight:800; color:var(--primary-text);">${x.title}</h4>
                                 </div>
-                                <i data-lucide="trash-2" class="action-icon i-del" style="width:18px;" onclick="deleteNotice(${x.id})"></i>
+                                <div style="display: flex; gap: 12px;">
+                                    <i data-lucide="edit-3" class="action-icon i-edit" style="width:18px; cursor: pointer;" onclick="editNotice(${x.id}, '${x.title.replace(/'/g, "\\'")}', '${x.content.replace(/'/g, "\\'").replace(/\n/g, "\\n")}', '${x.audience}', '${x.start_time}', '${x.expires_at || ''}')" title="Edit Notice"></i>
+                                    <i data-lucide="trash-2" class="action-icon i-del" style="width:18px; cursor: pointer;" onclick="deleteNotice(${x.id})" title="Delete Notice"></i>
+                                </div>
                             </div>
                             <p style="color:var(--secondary-text); font-size:14px; line-height:1.6; margin-bottom:20px;">${x.content}</p>
                             <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid rgba(0,0,0,0.05); padding-top:15px;">
@@ -1882,6 +1901,49 @@
             } catch (err) {
                 console.error(err);
             }
+        }
+
+        function editNotice(id, title, content, audience, startTime, expiryTime) {
+            document.querySelector('#mod-notice h2').textContent = 'Edit Notice';
+            document.querySelector('#mod-notice button[type="submit"]').textContent = 'Update Notice';
+            
+            document.getElementById('n-edit-id').value = id;
+            const form = document.getElementById('n-form');
+            form.title.value = title;
+            form.message.value = content;
+            
+            // Handle audience pills
+            const selectedRoles = audience.split(',');
+            document.querySelectorAll('#mod-notice .role-pill').forEach(pill => {
+                const role = pill.dataset.role;
+                if (selectedRoles.includes(role)) pill.classList.add('selected');
+                else pill.classList.remove('selected');
+            });
+            
+            // Format dates for datetime-local input
+            const formatForInput = (dateStr) => {
+                if (!dateStr) return '';
+                const d = new Date(dateStr);
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                const hours = String(d.getHours()).padStart(2, '0');
+                const minutes = String(d.getMinutes()).padStart(2, '0');
+                return `${year}-${month}-${day}T${hours}:${minutes}`;
+            };
+            
+            document.getElementById('n-start-time').value = formatForInput(startTime);
+            document.getElementById('n-expiry').value = expiryTime ? formatForInput(expiryTime) : '';
+            
+            // Calculate duration
+            if (startTime && expiryTime) {
+                const diff = (new Date(expiryTime) - new Date(startTime)) / (1000 * 60 * 60);
+                document.getElementById('n-duration').value = Math.round(diff);
+            } else {
+                document.getElementById('n-duration').value = '';
+            }
+            
+            openModal('mod-notice');
         }
 
         async function deleteNotice(id) {
@@ -1933,7 +1995,7 @@
             const btn = form.querySelector('button[type="submit"]');
             
             // Get selected roles
-            const selectedRoles = Array.from(document.querySelectorAll('.role-pill.selected')).map(p => p.dataset.role);
+            const selectedRoles = Array.from(document.querySelectorAll('#mod-notice .role-pill.selected')).map(p => p.dataset.role);
             if (selectedRoles.length === 0) {
                 tBox('⚠️ Please select at least one target audience');
                 return;
@@ -1945,6 +2007,11 @@
                 audience: selectedRoles
             };
 
+            const noticeId = document.getElementById('n-edit-id').value;
+            const isEdit = noticeId !== '';
+            const method = isEdit ? 'PUT' : 'POST';
+            const endpoint = isEdit ? `/api/admin/notices/${noticeId}` : '/api/admin/notices';
+
             // Fix local datetime missing timezone data (ISO conversion standardizes to UTC)
             if (data.start_time) data.start_time = new Date(data.start_time).toISOString();
             if (data.expires_at) data.expires_at = new Date(data.expires_at).toISOString();
@@ -1953,29 +2020,30 @@
             if(data.duration_hours) data.duration_hours = parseInt(data.duration_hours);
 
             btn.disabled = true;
-            btn.textContent = 'Transmitting... ⚡';
+            btn.textContent = isEdit ? 'Updating... ⚡' : 'Transmitting... ⚡';
 
             try {
-                const res = await fetch('/api/admin/notices', {
-                    method: 'POST',
+                const res = await fetch(endpoint, {
+                    method: method,
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tok}` },
                     body: JSON.stringify(data)
                 });
                 if(res.ok) {
-                    tBox('📢 Notice Published & Synchronized');
+                    tBox(isEdit ? '📢 Notice Updated' : '📢 Notice Published & Synchronized');
                     document.getElementById('mod-notice').style.display='none';
                     refreshData('notices');
                     form.reset();
-                    document.querySelectorAll('.role-pill').forEach(p => p.classList.remove('selected'));
-                    document.querySelector('.role-pill[data-role="Everyone"]').classList.add('selected');
+                    document.getElementById('n-edit-id').value = '';
+                    document.querySelectorAll('#mod-notice .role-pill').forEach(p => p.classList.remove('selected'));
+                    document.querySelector('#mod-notice .role-pill[data-role="Everyone"]').classList.add('selected');
                 } else {
-                    tBox('Error publishing notice');
+                    tBox('Error processing notice');
                 }
             } catch (err) {
                 tBox('Connection Error');
             } finally {
                 btn.disabled = false;
-                btn.textContent = 'Post Notice';
+                btn.textContent = isEdit ? 'Update Notice' : 'Post Notice';
             }
         };
 
@@ -2105,18 +2173,36 @@
         const originalOpenModal = openModal;
         openModal = function(id) {
             if (id === 'mod-notice') {
-                const now = new Date();
-                const year = now.getFullYear();
-                const month = String(now.getMonth() + 1).padStart(2, '0');
-                const day = String(now.getDate()).padStart(2, '0');
-                const hours = String(now.getHours()).padStart(2, '0');
-                const minutes = String(now.getMinutes()).padStart(2, '0');
-                document.getElementById('n-start-time').value = `${year}-${month}-${day}T${hours}:${minutes}`;
-                document.getElementById('n-duration').value = '24'; // Default 24h
-                updateNoticeExpiry();
+                // If the hidden ID is set, it means we are coming from editNotice, so don't reset.
+                // But wait, the Transmit button calls openModal directly. 
+                // We should check if n-edit-id is set. If we want to open for "New", we should clear it.
+                // However, editNotice calls openModal at the end.
+                // A better way is to check the title or something, or just have a separate reset function.
+                
+                // Let's assume if we call openModal('mod-notice') from anywhere else, we want a New notice.
+                // We'll add a check. If n-edit-id is empty, it's New.
+                const editId = document.getElementById('n-edit-id').value;
+                if (!editId) {
+                    document.querySelector('#mod-notice h2').textContent = 'Transmit New Notice';
+                    document.querySelector('#mod-notice button[type="submit"]').textContent = 'Post Notice';
+                    document.getElementById('n-form').reset();
+                    document.querySelectorAll('#mod-notice .role-pill').forEach(p => p.classList.remove('selected'));
+                    document.querySelector('#mod-notice .role-pill[data-role="Everyone"]').classList.add('selected');
+                    
+                    const now = new Date();
+                    const year = now.getFullYear();
+                    const month = String(now.getMonth() + 1).padStart(2, '0');
+                    const day = String(now.getDate()).padStart(2, '0');
+                    const hours = String(now.getHours()).padStart(2, '0');
+                    const minutes = String(now.getMinutes()).padStart(2, '0');
+                    document.getElementById('n-start-time').value = `${year}-${month}-${day}T${hours}:${minutes}`;
+                    document.getElementById('n-duration').value = '24'; // Default 24h
+                    updateNoticeExpiry();
+                }
             }
             originalOpenModal(id);
         };
+
 
         // Notice Bar Logic
         async function updateNoticeBar() {

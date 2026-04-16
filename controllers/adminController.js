@@ -487,19 +487,42 @@ const addNotice = async (req, res) => {
 
 const getNotices = async (req, res) => {
     try {
-        const { role, activeOnly } = req.query;
+        const { role, activeOnly, status } = req.query;
         // Map message AS content and target_roles AS audience for frontend compatibility
-        let query = 'SELECT id, title, message AS content, target_roles AS audience, start_time, expires_at, created_at FROM campus_notices';
+        let query = `
+            SELECT id, title, message AS content, target_roles AS audience, 
+            start_time, expires_at, created_at,
+            CASE 
+                WHEN NOW() < start_time THEN 'UPCOMING'
+                WHEN NOW() >= start_time AND (expires_at IS NULL OR NOW() <= expires_at) THEN 'ACTIVE'
+                ELSE 'EXPIRED'
+            END as current_status
+            FROM campus_notices
+        `;
         let params = [];
+        let whereClauses = [];
 
         if (activeOnly === 'true') {
-            query += ' WHERE (start_time <= NOW() AND (expires_at IS NULL OR expires_at > NOW()))';
-            if (role === 'admin') {
-                query += ` AND (target_roles ILIKE '%everyone%' OR target_roles ILIKE '%admin%')`;
-            } else if (role) {
-                query += ' AND (target_roles ILIKE \'%everyone%\' OR target_roles ILIKE $1)';
-                params.push(`%${role}%`);
+            whereClauses.push('(start_time <= NOW() AND (expires_at IS NULL OR expires_at > NOW()))');
+        }
+
+        if (status && status !== 'All') {
+            if (status.toUpperCase() === 'ACTIVE') {
+                whereClauses.push('(start_time <= NOW() AND (expires_at IS NULL OR expires_at > NOW()))');
+            } else if (status.toUpperCase() === 'UPCOMING') {
+                whereClauses.push('NOW() < start_time');
+            } else if (status.toUpperCase() === 'EXPIRED') {
+                whereClauses.push('expires_at < NOW()');
             }
+        }
+
+        if (role && role.toLowerCase() !== 'admin') {
+            whereClauses.push(`(target_roles ILIKE '%everyone%' OR target_roles ILIKE $${params.length + 1})`);
+            params.push(`%${role}%`);
+        }
+
+        if (whereClauses.length > 0) {
+            query += ' WHERE ' + whereClauses.join(' AND ');
         }
 
         query += ' ORDER BY created_at DESC';
@@ -511,6 +534,52 @@ const getNotices = async (req, res) => {
         res.status(500).json({ message: 'Server error fetching notices' });
     }
 };
+
+const updateNotice = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { title, message, content, audience, start_time, startTime, expires_at, expiryTime, duration_hours, duration } = req.body;
+        
+        const finalMessage = message || content;
+        const finalAudience = audience;
+        const finalStartTime = start_time || startTime;
+        const finalExpiresAt = expires_at || expiryTime;
+        const finalDuration = duration_hours || duration;
+
+        if (!title || !finalMessage) {
+            return res.status(400).json({ message: 'Title and content are required' });
+        }
+
+        // Audience normalization
+        let target_roles = 'Everyone';
+        if (Array.isArray(finalAudience) && finalAudience.length > 0) {
+            target_roles = finalAudience.includes('Everyone') ? 'Everyone' : finalAudience.join(',');
+        } else if (typeof finalAudience === 'string' && finalAudience.trim() !== '') {
+            target_roles = finalAudience;
+        }
+
+        let start = finalStartTime ? new Date(finalStartTime) : new Date();
+        let end = finalExpiresAt ? new Date(finalExpiresAt) : null;
+
+        if (finalDuration && !isNaN(finalDuration)) {
+            end = new Date(start.getTime() + (parseInt(finalDuration) * 60 * 60 * 1000));
+        }
+
+        const { rows } = await db.query(
+            'UPDATE campus_notices SET title = $1, message = $2, target_roles = $3, start_time = $4, expires_at = $5 WHERE id = $6 RETURNING *',
+            [title.trim(), finalMessage.trim(), target_roles, start, end, id]
+        );
+
+        if (rows.length === 0) return res.status(404).json({ message: 'Notice not found' });
+
+        res.json({ message: 'Notice updated successfully', notice: rows[0] });
+        logActivity(`Notice updated: ${title}`, 'notice');
+    } catch (error) {
+        console.error('Error updating notice:', error);
+        res.status(500).json({ message: 'Server error updating notice' });
+    }
+};
+
 
 
 // User Control (Reset PW)
@@ -718,7 +787,7 @@ const assignGuardDuty = async (req, res) => {
 module.exports = { 
     addUser, getUsers, deleteUser, updateUser, getStats, getIssues, updateIssueStatus, 
     addSubject, getSubjects, updateSubject, deleteSubject, addSchedule, getSchedules, updateSchedule, deleteSchedule,
-    addNotice, getNotices, deleteNotice, resetPassword,
+    addNotice, getNotices, updateNotice, deleteNotice, resetPassword,
     uploadBlueprint, getBlueprints, deleteBlueprint,
     getActivities, addActivity, checkEmail,
     getWorkerTasks, assignWorkerTask, getGuardDuties, assignGuardDuty

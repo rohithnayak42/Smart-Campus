@@ -6,7 +6,7 @@ const fs = require('fs');
 const {
         addUser, getUsers, deleteUser, updateUser, getStats, getIssues, updateIssueStatus,
         addSubject, getSubjects, updateSubject, deleteSubject, addSchedule, getSchedules, updateSchedule, deleteSchedule,
-        addNotice, getNotices, deleteNotice, resetPassword,
+        addNotice, getNotices, updateNotice, deleteNotice, resetPassword,
         uploadBlueprint, getBlueprints, deleteBlueprint
 } = require('../controllers/adminController');
 const { adminMiddleware } = require('../middlewares/authMiddleware');
@@ -52,6 +52,7 @@ router.delete('/schedules/:id', adminMiddleware, deleteSchedule);
 router.get('/notices', adminMiddleware, getNotices);
 router.get('/notices/live', adminMiddleware, getNotices); // Shortcut for live ones (logic in controller)
 router.post('/notices', adminMiddleware, addNotice);
+router.put('/notices/:id', adminMiddleware, updateNotice);
 router.delete('/notices/:id', adminMiddleware, deleteNotice);
 
 // Miscellaneous

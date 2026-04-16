@@ -5,7 +5,7 @@ const path = require('path');
 const db = require('./config/db');
 const { createUserTable } = require('./models/User');
 const { adminMiddleware } = require('./middlewares/authMiddleware');
-const { addUser, getUsers, getSubjects, getSchedules, getNotices, getIssues } = require('./controllers/adminController');
+const { addUser, getUsers, getSubjects, getSchedules, getNotices, getIssues, updateNotice, addNotice, deleteNotice } = require('./controllers/adminController');
 
 
 // Pre-flight Environment Check
@@ -58,6 +58,12 @@ const stakeholderRoutes = require('./routes/stakeholderRoutes');
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/stakeholder', stakeholderRoutes);
+
+// Global Notice Endpoints
+app.get('/api/notices', adminMiddleware, getNotices);
+app.post('/api/notices', adminMiddleware, addNotice);
+app.put('/api/notices/:id', adminMiddleware, updateNotice);
+app.delete('/api/notices/:id', adminMiddleware, deleteNotice);
 
 // Health check for Vercel diagnostic
 app.get('/api/health', async (req, res) => {
