@@ -337,10 +337,9 @@
             color: #B91C1C;
             padding: 10px;
             border-radius: 8px;
-            font-size: 12px;
+            font-size: 11px;
             margin-bottom: 15px;
             display: none;
-            text-align: center;
             border: 1px solid #FECACA;
         }
 
@@ -348,12 +347,18 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            margin-bottom: 4px;
-            transition: 0.3s;
+            margin-bottom: 6px;
+            font-size: 12px;
+            transition: 0.3s ease;
+            color: #9CA3AF; /* Default gray */
         }
-        .rule-item.valid { color: #10B981; }
-        .rule-item.invalid { color: #EF4444; }
-        .rule-item i { width: 12px; height: 12px; }
+        .rule-item.valid { 
+            color: #22C55E; /* Vibrant Green */
+            font-weight: 600;
+        }
+        .rule-item.invalid { 
+            color: #EF4444; /* Error Red */
+        }
     </style>
 </head>
 <body>
@@ -490,10 +495,10 @@
                 <input type="hidden" id="change-pass-userid">
                 
                 <div class="pwd-rules" id="live-validation">
-                    <div class="rule-item" data-rule="length"><i data-lucide="circle"></i> At least 8 characters</div>
-                    <div class="rule-item" data-rule="upper"><i data-lucide="circle"></i> 1 uppercase letter</div>
-                    <div class="rule-item" data-rule="number"><i data-lucide="circle"></i> 1 number (0-9)</div>
-                    <div class="rule-item" data-rule="special"><i data-lucide="circle"></i> 1 special character (@$!%*?&)</div>
+                    <div class="rule-item" id="rule-length" data-text="At least 8 characters">⭕ At least 8 characters</div>
+                    <div class="rule-item" id="rule-upper" data-text="1 uppercase letter">⭕ 1 uppercase letter</div>
+                    <div class="rule-item" id="rule-number" data-text="1 number (0-9)">⭕ 1 number (0-9)</div>
+                    <div class="rule-item" id="rule-special" data-text="1 special character (@$!%*?&)">⭕ 1 special character (@$!%*?&)</div>
                 </div>
 
                 <div class="input-group">
@@ -834,32 +839,52 @@
             }
         });
 
-        // Live Password Validation
-        document.getElementById('new-pwd').addEventListener('input', (e) => {
-            const val = e.target.value;
-            const rules = {
-                length: val.length >= 8,
-                upper: /[A-Z]/.test(val),
-                number: /[0-9]/.test(val),
-                special: /[@$!%*?&]/.test(val)
-            };
+        // Live Password Validation & Matching
+        const newPwdInput = document.getElementById('new-pwd');
+        const confirmPwdInput = document.getElementById('confirm-pwd');
 
-            for (const [key, valid] of Object.entries(rules)) {
-                const el = document.querySelector(`.rule-item[data-rule="${key}"]`);
-                const icon = el.querySelector('i');
-                if (valid) {
-                    el.classList.add('valid');
-                    el.classList.remove('invalid');
-                    icon.setAttribute('data-lucide', 'check-circle');
-                } else {
-                    el.classList.remove('valid');
-                    if (val.length > 0) el.classList.add('invalid');
-                    else el.classList.remove('invalid');
-                    icon.setAttribute('data-lucide', 'circle');
-                }
+        function toggleRule(id, isValid) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const text = el.dataset.text;
+            
+            if (isValid) {
+                el.innerHTML = `✅ ${text}`;
+                el.classList.add('valid');
+                el.classList.remove('invalid');
+            } else {
+                el.innerHTML = `⭕ ${text}`;
+                el.classList.remove('valid');
+                // Only show Red if there is content
+                if (newPwdInput.value.length > 0) el.classList.add('invalid');
+                else el.classList.remove('invalid');
             }
-            if (window.lucide) lucide.createIcons();
+        }
+
+        newPwdInput.addEventListener('input', (e) => {
+            const val = e.target.value;
+            toggleRule('rule-length', val.length >= 8);
+            toggleRule('rule-upper', /[A-Z]/.test(val));
+            toggleRule('rule-number', /[0-9]/.test(val));
+            toggleRule('rule-special', /[@$!%*?&]/.test(val));
+            
+            // Sync match state on main input too
+            checkMatch();
         });
+
+        confirmPwdInput.addEventListener('input', checkMatch);
+
+        function checkMatch() {
+            if (!confirmPwdInput.value) {
+                confirmPwdInput.style.borderColor = "#e5e7eb";
+                return;
+            }
+            if (confirmPwdInput.value === newPwdInput.value) {
+                confirmPwdInput.style.borderColor = "#22C55E";
+            } else {
+                confirmPwdInput.style.borderColor = "#EF4444";
+            }
+        }
 
         window.addEventListener('DOMContentLoaded', () => {
             if (window.lucide) lucide.createIcons();
